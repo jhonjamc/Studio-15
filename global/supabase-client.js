@@ -9,7 +9,7 @@
    <script src="supabase-client.js"></script>
    ============================================================================ */
 
-const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
-const SUPABASE_ANON_KEY = "TU-ANON-KEY-AQUI";
+const SUPABASE_URL = "https://aovuanbmdytmxrjrwhyb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvdnVhbmJtZHl0bXhyanJ3aHliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNDg3NjYsImV4cCI6MjA5NzgyNDc2Nn0.y5ONrot-F6OFBMd1yvm29kXbFMtV9BFFhYqv5C82P0g";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
