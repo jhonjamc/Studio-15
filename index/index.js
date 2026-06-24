@@ -254,6 +254,7 @@ async function initBookingWidget() {
         booking.barberId = b.id;
         booking.barberName = b.full_name || "Barbero";
         clearError();
+        refreshTimeSlots();
       });
       barbersList.appendChild(card);
     });
@@ -261,12 +262,41 @@ async function initBookingWidget() {
   }
 
   // --- Paso 3: fecha y hora ---
+  var timeSlots = container.querySelectorAll(".time-slot");
+
+  // Consulta las citas activas (pendiente/aceptada) de ESE barbero en ESA
+  // fecha y apaga los horarios que ya estén ocupados. Se vuelve a llamar
+  // cada vez que cambia el barbero o la fecha.
+  async function refreshTimeSlots() {
+    if (!booking.barberId || !booking.date) return;
+
+    var { data: taken, error: takenError } = await supabaseClient
+      .from("appointments")
+      .select("appointment_time")
+      .eq("employee_id", booking.barberId)
+      .eq("appointment_date", booking.date)
+      .in("status", ["pending", "accepted"]);
+
+    if (takenError) { console.error(takenError); return; }
+
+    var takenTimes = (taken || []).map(function (r) { return r.appointment_time; });
+
+    timeSlots.forEach(function (slot) {
+      var isTaken = takenTimes.indexOf(slot.dataset.time) !== -1;
+      slot.classList.toggle("disabled", isTaken);
+      if (isTaken && slot.classList.contains("selected")) {
+        slot.classList.remove("selected");
+        booking.time = null;
+      }
+    });
+  }
+
   dateInput.addEventListener("change", function () {
     booking.date = dateInput.value;
     clearError();
+    refreshTimeSlots();
   });
 
-  var timeSlots = container.querySelectorAll(".time-slot");
   timeSlots.forEach(function (slot) {
     slot.addEventListener("click", function () {
       if (slot.classList.contains("disabled")) return;
@@ -280,6 +310,7 @@ async function initBookingWidget() {
   // --- Navegación ---
   nextBtn.addEventListener("click", function () {
     if (!validateStep()) return;
+    if (step === 2) refreshTimeSlots(); // por si pasó tiempo desde que cargó la página
     if (step < totalSteps) { step++; renderStep(); } else { submitBooking(); }
   });
 
@@ -308,7 +339,12 @@ async function initBookingWidget() {
     nextBtn.textContent = "Confirmar y Agendar";
 
     if (error) {
-      showError("No se pudo agendar tu cita. Intenta de nuevo.");
+      if (error.code === "23505") {
+        showError("Justo ese horario se acaba de ocupar. Elige otro, por favor.");
+        await refreshTimeSlots();
+      } else {
+        showError("No se pudo agendar tu cita. Intenta de nuevo.");
+      }
       console.error(error);
       return;
     }
