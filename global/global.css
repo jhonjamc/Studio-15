@@ -1,0 +1,432 @@
+/* ============================================================================
+   ESTUDIO 15 — GLOBAL.CSS
+   Estilos compartidos por TODAS las páginas (index, productos, login).
+   No metas aquí nada que sea exclusivo de una sola página.
+
+   Índice:
+   1. Variables / Design tokens
+   2. Reset base
+   3. Utilidades compartidas (animaciones, pole-strip, fondos)
+   4. Header / Navbar (igual en todas las páginas)
+   5. Hero secundario (banner simple para páginas internas)
+   6. Carrito de compras (drawer lateral)
+   7. CTA / Contacto (sección compartida en home y productos)
+   8. Footer (igual en todas las páginas)
+   ============================================================================ */
+
+
+/* ============================================================
+   1. VARIABLES / DESIGN TOKENS
+   Cambia un color o medida aquí y se actualiza en todo el sitio.
+   ============================================================ */
+:root {
+  /* Colores de marca */
+  --color-red: #d4282c;
+  --color-red-glow: #ff5a5f;
+  --color-blue: #1c4dd4;
+  --color-cream: #f5dddd;
+  --color-ink: #19130f;
+
+  /* Fondos (tema oscuro unificado en todo el sitio) */
+  --color-bg: #0a0a0f;        /* fondo principal */
+  --color-bg-alt: #12141c;    /* fondo alterno para secciones */
+  --color-surface: #171923;   /* tarjetas / cards */
+  --color-border: #222533;    /* bordes sutiles */
+
+  /* Texto */
+  --color-text: #f3ede3;
+  --color-text-muted: #9a9aa5;
+
+  /* Gradientes */
+  --gradient-pole: linear-gradient(135deg, var(--color-red) 0%, #ffffff 50%, var(--color-blue) 100%);
+  --gradient-red: linear-gradient(135deg, var(--color-red) 0%, var(--color-red-glow) 100%);
+  --gradient-blue: linear-gradient(135deg, var(--color-blue) 0%, #4f7dff 100%);
+  --gradient-hero: linear-gradient(135deg, #1d1410 0%, #2a1a14 55%, #1c1f3a 100%);
+
+  /* Sombras */
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 16px 36px rgba(212, 40, 44, 0.25);
+
+  /* Tipografías */
+  --font-display: "Bebas Neue", sans-serif;
+  --font-sans: "Inter", sans-serif;
+
+  /* Radios */
+  --radius-sm: .65rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 999px;
+
+  /* --------------------------------------------------------
+     Alias de compatibilidad (usados por index.css / products.css
+     para no tener que reescribir cada selector existente).
+     -------------------------------------------------------- */
+  --background: var(--color-bg);
+  --background-alt: var(--color-bg-alt);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-bg: var(--color-surface);
+  --border: var(--color-border);
+  --border-color: var(--color-border);
+  --muted-foreground: var(--color-text-muted);
+  --text-main: var(--color-text);
+  --text-muted: var(--color-text-muted);
+  --primary: var(--color-red);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-blue);
+  --secondary-foreground: #ffffff;
+  --barber-red: var(--color-red);
+  --barber-red-glow: var(--color-red-glow);
+  --barber-blue: var(--color-blue);
+  --barber-cream: var(--color-cream);
+  --barber-ink: var(--color-ink);
+}
+
+
+/* ============================================================
+   2. RESET BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { display: block; max-width: 100%; }
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; border: none; background: none; cursor: pointer; }
+
+h1, h2, h3 { margin: 0; }
+.font-display,
+.logo-text, .hero-title, .section-title, .stat-k, .service-title,
+.cut-name, .product-name, .card-name, .cta-title, .footer-logo-text,
+.page-hero-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+i[data-lucide] { width: 18px; height: 18px; }
+
+
+/* ============================================================
+   3. UTILIDADES COMPARTIDAS
+   ============================================================ */
+.btn-shine { position: relative; overflow: hidden; isolation: isolate; }
+.btn-shine::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+  transform: translateX(-150%);
+  transition: transform 0.6s ease;
+  z-index: 1;
+}
+.btn-shine:hover::after { transform: translateX(150%); }
+
+.dot-pulse, .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--primary);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+.animate-fade-up { animation: fadeUp .8s ease both; }
+.animate-fade-in { animation: fadeIn 1s ease both; }
+@keyframes fadeUp { from{opacity:0; transform: translateY(24px);} to{opacity:1; transform:none;} }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+.pole-strip {
+  height: 6px; width: 100%;
+  background: repeating-linear-gradient(45deg, var(--color-red) 0 10px, #fff 10px 20px, var(--color-blue) 20px 30px);
+  background-size: 42px 42px;
+  animation: poleScroll 1.2s linear infinite;
+  opacity: .9;
+}
+.pole-strip.thick { height: 8px; opacity: 1; }
+@keyframes poleScroll { from { background-position: 0 0; } to { background-position: 42px 0; } }
+
+.hero-bg-diagonals {
+  position: absolute; inset: 0; z-index: -1; opacity: .5;
+  background-image: repeating-linear-gradient(135deg, rgba(212,40,44,0.05) 0 2px, transparent 2px 14px);
+}
+.hero-bg-diagonals.dark { opacity: .1; background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.08) 0 2px, transparent 2px 14px); }
+.hero-bg-diagonals.cta-diagonals { opacity: .15; background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.1) 0 2px, transparent 2px 14px); }
+
+
+/* ============================================================
+   4. HEADER / NAVBAR
+   Mismo HTML y CSS en index.html, products.html y login.html.
+   ============================================================ */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+.header-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+}
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-icon {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--gradient-pole);
+}
+.logo-icon i { width: 16px; height: 16px; color: var(--color-ink); }
+.logo-icon.small { width: 28px; height: 28px; }
+.logo-icon.small i { width: 12px; height: 12px; }
+.logo-text { font-size: 1.5rem; letter-spacing: .08em; color: var(--color-text); }
+.accent { color: var(--color-red); }
+
+.nav-desktop { display: none; gap: 32px; font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.nav-desktop a { color: var(--color-text-muted); transition: color .2s; }
+.nav-desktop a:hover { color: var(--color-red); }
+@media (min-width: 768px) { .nav-desktop { display: flex; } }
+
+.header-actions { display: flex; align-items: center; gap: 14px; }
+
+.btn-reservar {
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: var(--radius-pill); background: var(--color-red); color: #fff;
+  padding: 10px 18px; font-size: .85rem; font-weight: 700;
+  box-shadow: var(--shadow-pop);
+  transition: transform .2s;
+}
+.btn-reservar:hover { transform: scale(1.05); }
+.btn-reservar i { width: 16px; height: 16px; }
+
+/* Botón que abre el carrito, ubicado en el header */
+.cart-trigger {
+  position: relative;
+  display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 50%;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  transition: border-color .2s, color .2s, transform .2s;
+}
+.cart-trigger:hover { border-color: var(--color-red); color: var(--color-red); transform: translateY(-2px); }
+.cart-count {
+  position: absolute; top: -6px; right: -6px;
+  min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-red); color: #fff;
+  font-size: .65rem; font-weight: 800;
+  display: grid; place-items: center;
+  line-height: 1;
+}
+.cart-count[data-empty="true"] { display: none; }
+
+
+/* ============================================================
+   5. HERO SECUNDARIO
+   Banner simple para páginas internas (productos, login, etc.)
+   ============================================================ */
+.page-hero { position: relative; max-width: 1200px; margin: 0 auto; padding: 56px 20px 40px; }
+.page-hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  padding: 6px 14px; border-radius: var(--radius-pill);
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+}
+.page-hero-title { font-size: 56px; line-height: .95; margin-top: 18px; color: var(--color-text); }
+.page-hero-title .accent-gradient {
+  display: block;
+  background: linear-gradient(90deg, var(--color-red), var(--color-text), var(--color-blue));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.page-hero-desc { max-width: 480px; margin-top: 18px; color: var(--color-text-muted); font-size: 16px; }
+@media (min-width: 768px) { .page-hero-title { font-size: 64px; } }
+
+
+/* ============================================================
+   6. CARRITO DE COMPRAS (drawer lateral)
+   Mismo HTML/CSS/JS en todas las páginas. El carrito se guarda
+   en localStorage para mantenerse al navegar entre páginas.
+   ============================================================ */
+.cart-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(0,0,0,.55);
+  opacity: 0; visibility: hidden;
+  transition: opacity .3s ease;
+}
+.cart-overlay.open { opacity: 1; visibility: visible; }
+
+.cart-drawer {
+  position: fixed; top: 0; right: 0; z-index: 91;
+  width: min(420px, 100%); height: 100%;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform .35s ease;
+}
+.cart-drawer.open { transform: translateX(0); }
+
+.cart-drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--color-border);
+}
+.cart-drawer-header h3 { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: .04em; }
+.cart-close-btn {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  color: var(--color-text);
+  transition: background .2s;
+}
+.cart-close-btn:hover { background: var(--color-bg-alt); }
+
+.cart-items { flex: 1; overflow-y: auto; padding: 12px 22px; }
+.cart-empty { color: var(--color-text-muted); font-size: .9rem; text-align: center; margin-top: 40px; }
+
+.cart-item {
+  display: grid; grid-template-columns: 64px 1fr auto; gap: 14px;
+  align-items: center; padding: 16px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.cart-item-img {
+  width: 64px; height: 64px; border-radius: var(--radius-sm);
+  overflow: hidden; background: var(--color-bg-alt);
+}
+.cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.cart-item-info { min-width: 0; }
+.cart-item-name { font-size: .92rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-item-price { margin-top: 4px; font-family: var(--font-display); color: var(--color-red); font-size: 1rem; }
+.cart-item-qty { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.cart-qty-btn {
+  width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--color-border);
+  color: var(--color-text); display: grid; place-items: center; font-size: .8rem;
+  transition: border-color .2s, color .2s;
+}
+.cart-qty-btn:hover { border-color: var(--color-red); color: var(--color-red); }
+.cart-item-qty-value { min-width: 16px; text-align: center; font-size: .85rem; }
+.cart-item-remove {
+  align-self: flex-start;
+  color: var(--color-text-muted); transition: color .2s;
+}
+.cart-item-remove:hover { color: var(--color-red); }
+.cart-item-remove i { width: 16px; height: 16px; }
+
+.cart-drawer-footer { padding: 18px 22px 22px; border-top: 1px solid var(--color-border); }
+.cart-total-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  margin-bottom: 14px;
+}
+.cart-total-row span:last-child { font-family: var(--font-display); font-size: 1.6rem; color: var(--color-red); text-transform: none; }
+.cart-checkout-btn {
+  width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--radius-pill); background: var(--gradient-red); color: #fff;
+  padding: 14px; font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  box-shadow: var(--shadow-pop); transition: transform .2s;
+}
+.cart-checkout-btn:hover { transform: scale(1.02); }
+
+
+/* ============================================================
+   7. CTA / CONTACTO
+   Sección compartida tal cual entre index.html y products.html.
+   ============================================================ */
+.cta-section { position: relative; overflow: hidden; }
+.cta-bg { position: absolute; inset: 0; background: var(--gradient-hero); z-index: -2; }
+.cta-inner {
+  position: relative; max-width: 1280px; margin: 0 auto;
+  display: grid; gap: 40px; padding: 80px 20px;
+  color: var(--color-cream);
+}
+@media (min-width: 768px) { .cta-inner { grid-template-columns: 1fr 1fr; align-items: center; } }
+
+.cta-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(6px);
+  border-radius: var(--radius-pill); padding: 6px 14px;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+}
+.cta-title { font-size: 2.8rem; line-height: .95; margin: 16px 0 0; }
+@media (min-width: 768px) { .cta-title { font-size: 4rem; } }
+.cta-highlight { color: var(--color-red-glow); }
+.cta-desc { margin-top: 16px; max-width: 420px; color: rgba(245,236,221,0.8); }
+.cta-actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+.cta-btn-cream, .cta-btn-outline {
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: var(--radius-pill); padding: 12px 24px;
+  font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  transition: transform .2s, background .2s, color .2s;
+}
+.cta-btn-cream { background: var(--color-cream); color: var(--color-ink); }
+.cta-btn-cream:hover { transform: scale(1.05); }
+.cta-btn-outline { border: 2px solid var(--color-cream); }
+.cta-btn-outline:hover { background: var(--color-cream); color: var(--color-ink); transform: scale(1.05); }
+
+.contact-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .contact-grid { grid-template-columns: 1fr 1fr; } }
+.contact-card {
+  border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius-md); padding: 20px;
+  transition: transform .2s, background .2s;
+}
+.contact-card:hover { transform: translateY(-4px); background: rgba(255,255,255,0.1); }
+.contact-icon { width: 20px; height: 20px; color: var(--color-red-glow); }
+.contact-title { margin-top: 12px; font-family: var(--font-display); font-size: 1.3rem; }
+.contact-desc { font-size: .85rem; color: rgba(245,236,221,0.75); }
+
+
+/* ============================================================
+   8. FOOTER
+   Mismo HTML y CSS en todas las páginas (se inyecta desde
+   global.js con FOOTER_TEMPLATE). 3 columnas en desktop,
+   apiladas en mobile. Sin barra de copyright.
+   ============================================================ */
+.footer {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+  padding: 56px 20px 36px;
+}
+.footer-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: grid; gap: 36px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .footer-inner { grid-template-columns: 1.4fr 1fr 1fr; }
+}
+
+.footer-col { display: flex; flex-direction: column; gap: 10px; }
+.footer-col-title {
+  font-family: var(--font-display); font-size: 1.1rem;
+  letter-spacing: .06em; color: var(--color-text);
+  margin-bottom: 4px;
+}
+.footer-col a {
+  font-size: .88rem; color: var(--color-text-muted);
+  transition: color .2s;
+}
+.footer-col a:hover { color: var(--color-red); }
+.footer-col p {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: .85rem; color: var(--color-text-muted); margin: 0;
+}
+.footer-col p i { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; color: var(--color-red-glow); }
+
+.footer-logo { display: flex; align-items: center; gap: 8px; }
+.footer-logo-text { font-size: 1.2rem; letter-spacing: .08em; color: var(--color-text); }
+.footer-desc { font-size: .88rem; color: var(--color-text-muted); max-width: 320px; line-height: 1.5; }
+
+.footer-social { display: flex; gap: 10px; margin-top: 6px; }
+.footer-social a {
+  display: grid; place-items: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid var(--color-border); color: var(--color-text);
+  transition: border-color .2s, color .2s, transform .2s;
+}
+.footer-social a:hover { border-color: var(--color-red); color: var(--color-red); transform: translateY(-2px); }
+.footer-social i { width: 16px; height: 16px; }

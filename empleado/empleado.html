@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTUDIO 15 - PANEL EMPLEADO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" />
+<link rel="stylesheet" href="../global/global.css">
+<link rel="stylesheet" href="../global/dashboard.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="dashboard-section">
+  <div class="dashboard-inner">
+
+    <div class="dashboard-header">
+      <div>
+        <h1 class="dashboard-title">Hola, <span id="employee-name">...</span></h1>
+        <p class="dashboard-subtitle">Tus citas y tus ganancias. Aquí no se muestra información de otros empleados.</p>
+      </div>
+      <button type="button" class="logout-btn" data-logout><i data-lucide="log-out"></i> Cerrar sesión</button>
+    </div>
+
+    <!-- ===================== RESUMEN DE GANANCIAS ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="wallet"></i> Tus ganancias</h2>
+      <div class="cards-grid cols-3">
+        <div class="dash-card">
+          <p class="dash-card-label">Total ganado</p>
+          <p class="dash-card-value" id="kpi-total-earned">$0.00</p>
+          <p class="dash-card-sub">De citas completadas</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Citas completadas</p>
+          <p class="dash-card-value" id="kpi-completed-count">0</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Tu comisión</p>
+          <p class="dash-card-value" id="kpi-commission-pct">0%</p>
+          <p class="dash-card-sub">Por cada cita</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== ANÁLISIS DE TUS GANANCIAS ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="bar-chart-3"></i> Análisis de tus ganancias</h2>
+      <div class="dash-card">
+        <div class="earnings-row">
+          <div class="earnings-row-top">
+            <span class="earnings-row-name">Lo que te corresponde a ti</span>
+            <span class="earnings-row-value" id="bar-employee-value">$0.00</span>
+          </div>
+          <div class="earnings-track"><div class="earnings-fill" id="bar-employee-fill" style="width:0%"></div></div>
+        </div>
+        <div class="earnings-row">
+          <div class="earnings-row-top">
+            <span class="earnings-row-name">Lo que queda para el negocio (de tus citas)</span>
+            <span class="earnings-row-value" id="bar-shop-value">$0.00</span>
+          </div>
+          <div class="earnings-track"><div class="earnings-fill blue" id="bar-shop-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== CITAS QUE TE PIDIERON ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="calendar"></i> Citas que te pidieron</h2>
+      <div class="cards-grid cols-3" id="appointments-list">
+        <p class="dashboard-empty">Cargando citas...</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<div id="site-cart"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.378.0/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../global/supabase-client.js"></script>
+<script src="../global/auth.js"></script>
+<script src="../global/global.js"></script>
+<script src="empleado.js"></script>
+
+</body>
+</html>

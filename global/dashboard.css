@@ -1,0 +1,201 @@
+/* ============================================================================
+   ESTUDIO 15 — DASHBOARD.CSS
+   Estilos compartidos por admin.html, empleado.html y cliente.html.
+   Requiere global.css cargado antes.
+
+   Índice:
+   1. Layout general del panel
+   2. Grilla de cards
+   3. Card de cita (aceptar / rechazar)
+   4. Badges de estado
+   5. Barra de fidelidad (5 cortes -> 6to gratis)
+   6. Barras de ganancias
+   7. Historial de compras
+   8. Formularios cortos dentro de cards (ej. vincular empleado)
+   ============================================================================ */
+
+
+/* ============================================================
+   1. LAYOUT GENERAL DEL PANEL
+   ============================================================ */
+.dashboard-section { padding: 40px 20px 80px; }
+.dashboard-inner { max-width: 1280px; margin: 0 auto; }
+
+.dashboard-header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 16px; margin-bottom: 36px;
+}
+.dashboard-title { font-size: 2.2rem; line-height: 1; }
+.dashboard-subtitle { margin-top: 6px; color: var(--color-text-muted); font-size: .9rem; }
+
+.logout-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  padding: 10px 18px; font-size: .82rem; font-weight: 700; text-transform: uppercase;
+  color: var(--color-text); transition: border-color .2s, color .2s;
+}
+.logout-btn:hover { border-color: var(--color-red); color: var(--color-red); }
+
+.dashboard-block { margin-bottom: 48px; }
+.dashboard-block-title {
+  font-size: 1.5rem; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.dashboard-block-title i { width: 20px; height: 20px; color: var(--color-red); }
+
+.dashboard-empty {
+  color: var(--color-text-muted); font-size: .9rem;
+  border: 1px dashed var(--color-border); border-radius: var(--radius-md);
+  padding: 24px; text-align: center;
+}
+
+.dashboard-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+.dashboard-tab {
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  color: var(--color-text); padding: 8px 18px; border-radius: var(--radius-pill);
+  font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer;
+  transition: all .2s;
+}
+.dashboard-tab:hover { border-color: var(--color-red); }
+.dashboard-tab.active { background: var(--gradient-red); color: #fff; border-color: transparent; }
+
+
+/* ============================================================
+   2. GRILLA DE CARDS (genérica, se adapta sola)
+   ============================================================ */
+.cards-grid {
+  display: grid; gap: 18px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) { .cards-grid.cols-2 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .cards-grid.cols-3 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1100px) { .cards-grid.cols-4 { grid-template-columns: repeat(4, 1fr); } }
+
+.dash-card {
+  border: 1px solid var(--color-border); background: var(--color-surface);
+  border-radius: var(--radius-md); padding: 22px;
+  box-shadow: var(--shadow-card);
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+}
+.dash-card:hover { transform: translateY(-4px); border-color: var(--color-red); box-shadow: var(--shadow-pop); }
+
+.dash-card-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--color-text-muted); }
+.dash-card-value { font-family: var(--font-display); font-size: 2rem; color: var(--color-red); margin-top: 6px; }
+.dash-card-sub { font-size: .8rem; color: var(--color-text-muted); margin-top: 4px; }
+
+
+/* ============================================================
+   3. CARD DE CITA (aceptar / rechazar / completar)
+   ============================================================ */
+.appt-card { display: flex; flex-direction: column; gap: 12px; }
+.appt-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.appt-client-name { font-size: 1.1rem; font-weight: 700; }
+.appt-service { font-size: .85rem; color: var(--color-text-muted); margin-top: 2px; }
+
+.appt-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--color-text-muted); }
+.appt-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.appt-meta i { width: 14px; height: 14px; }
+
+.appt-price { font-family: var(--font-display); font-size: 1.4rem; color: var(--color-red); }
+
+.appt-actions { display: flex; gap: 10px; margin-top: 6px; }
+.appt-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px; border-radius: var(--radius-sm);
+  font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  transition: transform .15s, opacity .15s;
+}
+.appt-btn:hover { transform: translateY(-2px); }
+.appt-btn-accept { background: var(--gradient-red); color: #fff; }
+.appt-btn-reject { border: 1.5px solid var(--color-border); color: var(--color-text); }
+.appt-btn-complete { background: var(--color-blue); color: #fff; }
+.appt-btn[disabled] { opacity: .5; pointer-events: none; }
+
+
+/* ============================================================
+   4. BADGES DE ESTADO
+   ============================================================ */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: var(--radius-pill);
+  font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+  flex-shrink: 0;
+}
+.status-badge.pending { background: rgba(245, 166, 35, .15); color: #f5a623; }
+.status-badge.accepted { background: rgba(46, 204, 113, .15); color: #2ecc71; }
+.status-badge.rejected { background: rgba(212, 40, 44, .15); color: var(--color-red); }
+.status-badge.completed { background: rgba(28, 77, 212, .18); color: #5c8bff; }
+.status-badge.cancelled { background: rgba(154, 154, 165, .18); color: var(--color-text-muted); }
+
+
+/* ============================================================
+   5. BARRA DE FIDELIDAD (5 cortes -> 6to gratis)
+   ============================================================ */
+.loyalty-card { display: flex; flex-direction: column; gap: 14px; }
+.loyalty-top { display: flex; align-items: center; justify-content: space-between; }
+.loyalty-name { font-weight: 700; }
+.loyalty-count { font-family: var(--font-display); color: var(--color-red); font-size: 1.2rem; }
+
+.loyalty-track {
+  display: flex; gap: 6px;
+}
+.loyalty-dot {
+  flex: 1; height: 10px; border-radius: var(--radius-pill);
+  background: var(--color-bg-alt); border: 1px solid var(--color-border);
+  transition: background .3s, border-color .3s;
+}
+.loyalty-dot.filled { background: var(--gradient-red); border-color: transparent; }
+.loyalty-dot.free { background: var(--color-blue); border-color: transparent; }
+
+.loyalty-message { font-size: .82rem; color: var(--color-text-muted); }
+.loyalty-message.ready { color: #2ecc71; font-weight: 700; }
+
+
+/* ============================================================
+   6. BARRAS DE GANANCIAS
+   ============================================================ */
+.earnings-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.earnings-row:last-child { margin-bottom: 0; }
+.earnings-row-top { display: flex; align-items: center; justify-content: space-between; font-size: .85rem; }
+.earnings-row-name { font-weight: 700; }
+.earnings-row-value { font-family: var(--font-display); color: var(--color-red); }
+.earnings-track { height: 10px; border-radius: var(--radius-pill); background: var(--color-bg-alt); overflow: hidden; }
+.earnings-fill { height: 100%; border-radius: var(--radius-pill); background: var(--gradient-red); transition: width .4s ease; }
+.earnings-fill.blue { background: var(--gradient-blue); }
+
+
+/* ============================================================
+   7. HISTORIAL DE COMPRAS
+   ============================================================ */
+.purchase-card { display: flex; flex-direction: column; gap: 10px; }
+.purchase-top { display: flex; align-items: center; justify-content: space-between; }
+.purchase-date { font-size: .78rem; color: var(--color-text-muted); }
+.purchase-total { font-family: var(--font-display); font-size: 1.3rem; color: var(--color-red); }
+.purchase-items { display: flex; flex-direction: column; gap: 4px; }
+.purchase-item-row { display: flex; justify-content: space-between; font-size: .85rem; color: var(--color-text-muted); }
+.purchase-item-row span:last-child { color: var(--color-text); }
+
+
+/* ============================================================
+   8. FORMULARIOS CORTOS DENTRO DE CARDS
+   (ej. admin vinculando un empleado nuevo)
+   ============================================================ */
+.dash-form { display: flex; flex-direction: column; gap: 12px; }
+.dash-form label { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-muted); }
+.dash-form input, .dash-form select {
+  width: 100%; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+  padding: 10px 12px; font-size: .9rem; font-family: var(--font-sans);
+  background: var(--color-bg); color: var(--color-text);
+}
+.dash-form input:focus, .dash-form select:focus { outline: none; border-color: var(--color-red); }
+.dash-form-submit {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: var(--radius-pill); background: var(--gradient-red); color: #fff;
+  padding: 10px 22px; font-size: .82rem; font-weight: 700; text-transform: uppercase;
+  transition: transform .2s;
+}
+.dash-form-submit:hover { transform: scale(1.04); }
+.dash-form-msg { font-size: .82rem; font-weight: 600; min-height: 1.2em; }
+.dash-form-msg.ok { color: #2ecc71; }
+.dash-form-msg.error { color: var(--color-red); }

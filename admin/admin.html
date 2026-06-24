@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTUDIO 15 - PANEL ADMIN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" />
+<link rel="stylesheet" href="../global/global.css">
+<link rel="stylesheet" href="../global/dashboard.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="dashboard-section">
+  <div class="dashboard-inner">
+
+    <div class="dashboard-header">
+      <div>
+        <h1 class="dashboard-title">Hola, <span id="admin-name">...</span></h1>
+        <p class="dashboard-subtitle">Vista completa del negocio: citas, ganancias y clientes.</p>
+      </div>
+      <button type="button" class="logout-btn" data-logout><i data-lucide="log-out"></i> Cerrar sesión</button>
+    </div>
+
+    <!-- ===================== KPIs GENERALES ===================== -->
+    <div class="dashboard-block">
+      <div class="cards-grid cols-4">
+        <div class="dash-card">
+          <p class="dash-card-label">Ingresos totales</p>
+          <p class="dash-card-value" id="kpi-revenue">$0.00</p>
+          <p class="dash-card-sub">Citas completadas</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Para los empleados</p>
+          <p class="dash-card-value" id="kpi-employees-total">$0.00</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Para ti</p>
+          <p class="dash-card-value" id="kpi-admin-total">$0.00</p>
+          <p class="dash-card-sub">Tu corte + lo que queda del negocio</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Citas pendientes</p>
+          <p class="dash-card-value" id="kpi-pending-count">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== ANÁLISIS DE GANANCIAS POR EMPLEADO ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="bar-chart-3"></i> Ganancias por empleado</h2>
+      <div class="dash-card" id="employee-earnings-card">
+        <p class="dashboard-empty">Cargando ganancias...</p>
+      </div>
+    </div>
+
+    <!-- ===================== TUS CITAS (el admin como barbero) ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="calendar"></i> Tus citas (como barbero)</h2>
+      <div class="cards-grid cols-3" id="own-appointments-list">
+        <p class="dashboard-empty">Cargando...</p>
+      </div>
+    </div>
+
+    <!-- ===================== CITAS DE LOS EMPLEADOS ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="users"></i> Citas de los empleados</h2>
+      <div class="cards-grid cols-3" id="team-appointments-list">
+        <p class="dashboard-empty">Cargando...</p>
+      </div>
+    </div>
+
+    <!-- ===================== FIDELIDAD DE CLIENTES ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="gift"></i> Fidelidad de clientes</h2>
+      <div class="cards-grid cols-3" id="clients-loyalty-list">
+        <p class="dashboard-empty">Cargando clientes...</p>
+      </div>
+    </div>
+
+    <!-- ===================== VINCULAR EMPLEADO ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="user-plus"></i> Vincular empleado</h2>
+      <div class="dash-card" style="max-width:480px;">
+        <p class="dash-card-sub" style="margin-bottom:14px;">
+          Primero crea el usuario en Supabase Dashboard → Authentication → Add user,
+          copia su UUID y complétalo aquí para activarlo como empleado.
+        </p>
+        <form class="dash-form" id="link-employee-form">
+          <div>
+            <label for="emp-uuid">UUID del usuario</label>
+            <input type="text" id="emp-uuid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+          </div>
+          <div>
+            <label for="emp-name">Nombre completo</label>
+            <input type="text" id="emp-name" placeholder="Nombre del empleado" required>
+          </div>
+          <div>
+            <label for="emp-phone">Teléfono</label>
+            <input type="text" id="emp-phone" placeholder="+57 300 000 0000">
+          </div>
+          <div>
+            <label for="emp-commission">Comisión (%)</label>
+            <input type="number" id="emp-commission" value="50" min="0" max="100" required>
+          </div>
+          <button type="submit" class="dash-form-submit">Activar como empleado</button>
+          <p class="dash-form-msg" id="link-employee-msg"></p>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<div id="site-cart"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.378.0/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../global/supabase-client.js"></script>
+<script src="../global/auth.js"></script>
+<script src="../global/global.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>

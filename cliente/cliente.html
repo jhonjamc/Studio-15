@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTUDIO 15 - MI CUENTA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" />
+<link rel="stylesheet" href="../global/global.css">
+<link rel="stylesheet" href="../global/dashboard.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="dashboard-section">
+  <div class="dashboard-inner">
+
+    <div class="dashboard-header">
+      <div>
+        <h1 class="dashboard-title">Hola, <span id="client-name">...</span></h1>
+        <p class="dashboard-subtitle">Tus citas, tu progreso de fidelidad y tus compras.</p>
+      </div>
+      <button type="button" class="logout-btn" data-logout><i data-lucide="log-out"></i> Cerrar sesión</button>
+    </div>
+
+    <!-- ===================== BARRA DE FIDELIDAD ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="gift"></i> Tu progreso de fidelidad</h2>
+      <div class="dash-card loyalty-card">
+        <div class="loyalty-top">
+          <span class="loyalty-name">Cortes completados</span>
+          <span class="loyalty-count" id="loyalty-count">0 / 6</span>
+        </div>
+        <div class="loyalty-track" id="loyalty-track"></div>
+        <p class="loyalty-message" id="loyalty-message">Cada 6to corte va por nuestra cuenta. ¡Sigue viniendo!</p>
+      </div>
+    </div>
+
+    <!-- ===================== MIS CITAS ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="calendar"></i> Mis citas</h2>
+      <div class="cards-grid cols-3" id="appointments-list">
+        <p class="dashboard-empty">Cargando tus citas...</p>
+      </div>
+    </div>
+
+    <!-- ===================== HISTORIAL DE COMPRAS ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="shopping-bag"></i> Historial de compras</h2>
+      <div class="cards-grid cols-3" id="purchases-list">
+        <p class="dashboard-empty">Cargando tu historial...</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="site-footer"></div>
+<div id="site-cart"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.378.0/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../global/supabase-client.js"></script>
+<script src="../global/auth.js"></script>
+<script src="../global/global.js"></script>
+<script src="cliente.js"></script>
+
+</body>
+</html>

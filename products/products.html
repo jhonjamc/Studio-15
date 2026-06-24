@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTUDIO 15 - PRODUCTOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" />
+<!-- 1. Global primero (variables, header, footer, carrito, cta) -->
+<link rel="stylesheet" href="../global/global.css">
+<!-- 2. Estilos exclusivos de esta página -->
+<link rel="stylesheet" href="products.css">
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER / NAVBAR — inyectado por global.js
+     ============================================================ -->
+<div id="site-header"></div>
+
+<!-- ============================================================
+     HERO SECUNDARIO (page-hero, definido en global.css)
+     ============================================================ -->
+<section class="page-hero">
+  <div class="fade-up">
+    <span class="page-hero-tag"><span class="dot"></span> Catálogo completo</span>
+    <h1 class="page-hero-title">TODOS NUESTROS<span class="accent-gradient">PRODUCTOS</span></h1>
+    <p class="page-hero-desc">Pomadas, aceites, shampoos, ceras y accesorios. Todo lo que usamos en el estudio, disponible para ti.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     FILTROS Y GRILLA — exclusivos de esta página (products.css)
+     ============================================================ -->
+<div class="filters">
+  <button class="filter-btn active" data-filter="all">Todos</button>
+  <button class="filter-btn" data-filter="pomadas">Pomadas</button>
+  <button class="filter-btn" data-filter="barba">Barba</button>
+  <button class="filter-btn" data-filter="cabello">Cabello</button>
+  <button class="filter-btn" data-filter="accesorios">Accesorios</button>
+</div>
+
+<section class="grid" id="productsGrid">
+
+  <article class="card" data-cat="pomadas" data-product data-id="pomada-mate" data-name="Pomada Mate" data-price="18" data-img="img/product-pomade.jpg">
+    <div class="card-img-wrap">
+      <img src="../img/product-pomade.jpg" alt="Pomada Mate">
+      <span class="badge red">Nuevo</span>
+      <div class="card-overlay"><span class="overlay-btn">Ver detalles</span></div>
+    </div>
+    <div class="card-body">
+      <div><p class="card-tag">Fijación fuerte</p><h3 class="card-name">Pomada Mate</h3></div>
+      <div class="card-price-wrap"><span class="card-price">$18</span><button class="add-btn" type="button" data-add-cart aria-label="Añadir Pomada Mate">+</button></div>
+    </div>
+  </article>
+
+  <article class="card" data-cat="barba" data-product data-id="aceite-barba" data-name="Aceite de Barba" data-price="22" data-img="img/product-beard-oil.jpg">
+    <div class="card-img-wrap">
+      <img src="../img/product-beard-oil.jpg" alt="Aceite de Barba">
+      <span class="badge blue">Top</span>
+      <div class="card-overlay"><span class="overlay-btn">Ver detalles</span></div>
+    </div>
+    <div class="card-body">
+      <div><p class="card-tag">Hidrata y suaviza</p><h3 class="card-name">Aceite de Barba</h3></div>
+      <div class="card-price-wrap"><span class="card-price">$22</span><button class="add-btn" type="button" data-add-cart aria-label="Añadir Aceite de Barba">+</button></div>
+    </div>
+  </article>
+
+  <article class="card" data-cat="cabello" data-product data-id="shampoo-premium" data-name="Shampoo Premium" data-price="15" data-img="img/product-shampoo.jpg">
+    <div class="card-img-wrap">
+      <img src="../img/product-shampoo.jpg" alt="Shampoo Premium">
+      <span class="badge red">Nuevo</span>
+      <div class="card-overlay"><span class="overlay-btn">Ver detalles</span></div>
+    </div>
+    <div class="card-body">
+      <div><p class="card-tag">Cuero cabelludo</p><h3 class="card-name">Shampoo Premium</h3></div>
+      <div class="card-price-wrap"><span class="card-price">$15</span><button class="add-btn" type="button" data-add-cart aria-label="Añadir Shampoo Premium">+</button></div>
+    </div>
+  </article>
+
+  <article class="card" data-cat="pomadas" data-product data-id="cera-clasica" data-name="Cera Clásica" data-price="16" data-img="img/product-wax.jpg">
+    <div class="card-img-wrap">
+      <img src="../img/product-wax.jpg" alt="Cera Clásica">
+      <span class="badge blue">Top</span>
+      <div class="card-overlay"><span class="overlay-btn">Ver detalles</span></div>
+    </div>
+    <div class="card-body">
+      <div><p class="card-tag">Brillo y textura</p><h3 class="card-name">Cera Clásica</h3></div>
+      <div class="card-price-wrap"><span class="card-price">$16</span><button class="add-btn" type="button" data-add-cart aria-label="Añadir Cera Clásica">+</button></div>
+    </div>
+  </article>
+
+  <article class="card" data-cat="barba" data-product data-id="balsamo-barba" data-name="Bálsamo de Barba" data-price="20" data-img="img/product-beard-balm.jpg">
+    <div class="card-img-wrap">
+      <img src="../img/product-beard-balm.jpg" alt="Bálsamo de Barba">
+      <span class="badge red">Nuevo</span>
+      <div class="card-overlay"><span class="overlay-btn">Ver detalles</span></div>
+    </div>
+    <div class="card-body">
+      <div><p class="card-tag">Modela y nutre</p><h3 class="card-name">Bálsamo de Barba</h3></div>
+      <div class="card-price-wrap"><span class="card-price">$20</span><button class="add-btn" type="button" data-add-cart aria-label="Añadir Bálsamo de Barba">+</button></div>
+    </div>
+  </article>
+
+  <article class="card" data-cat="cabello" data-product data-id="acondicionador" data-name="Acondicionador" data-price="14" data-img="img/product-conditioner.jpg">
+    <div class="card-img-wrap">
+      <img src="../img/product-conditioner.jpg" alt="Acondicionador">
+      <span class="badge blue">Top</span>
+      <div class="card-overlay"><span class="overlay-btn">Ver detalles</span></div>
+    </div>
+    <div class="card-body">
+      <div><p class="card-tag">Suavidad y brillo</p><h3 class="card-name">Acondicionador</h3></div>
+      <div class="card-price-wrap"><span class="card-price">$14</span><button class="add-btn" type="button" data-add-cart aria-label="Añadir Acondicionador">+</button></div>
+    </div>
+  </article>
+
+  <article class="card" data-cat="accesorios" data-product data-id="peine-madera" data-name="Peine de Madera" data-price="9" data-img="img/product-comb.jpg">
+    <div class="card-img-wrap">
+      <img src="../img/product-comb.jpg" alt="Peine de Madera">
+      <span class="badge red">Nuevo</span>
+      <div class="card-overlay"><span class="overlay-btn">Ver detalles</span></div>
+    </div>
+    <div class="card-body">
+      <div><p class="card-tag">Antiestático</p><h3 class="card-name">Peine de Madera</h3></div>
+      <div class="card-price-wrap"><span class="card-price">$9</span><button class="add-btn" type="button" data-add-cart aria-label="Añadir Peine de Madera">+</button></div>
+    </div>
+  </article>
+
+  <article class="card" data-cat="accesorios" data-product data-id="cepillo-barba" data-name="Cepillo para Barba" data-price="13" data-img="img/product-brush.jpg">
+    <div class="card-img-wrap">
+      <img src="../img/product-brush.jpg" alt="Cepillo para Barba">
+      <span class="badge blue">Top</span>
+      <div class="card-overlay"><span class="overlay-btn">Ver detalles</span></div>
+    </div>
+    <div class="card-body">
+      <div><p class="card-tag">Cerdas naturales</p><h3 class="card-name">Cepillo para Barba</h3></div>
+      <div class="card-price-wrap"><span class="card-price">$13</span><button class="add-btn" type="button" data-add-cart aria-label="Añadir Cepillo para Barba">+</button></div>
+    </div>
+  </article>
+
+</section>
+
+<!-- ============================================================
+     CTA / CONTACTO — igual en index.html y products.html
+     ============================================================ -->
+<section id="reservar" class="cta-section">
+  <div class="cta-bg"></div>
+  <div class="hero-bg-diagonals cta-diagonals"></div>
+  <div class="cta-inner">
+    <div class="cta-left">
+      <span class="cta-badge">Reserva ya</span>
+      <h2 class="cta-title">Tu silla te <span class="cta-highlight">espera</span></h2>
+      <p class="cta-desc">Agenda en segundos por WhatsApp o llámanos. Sin esperas, con el barbero que prefieras.</p>
+      <div class="cta-actions">
+        <a href="tel:+10000000000" class="btn-shine cta-btn-cream">
+          <i data-lucide="phone"></i> Llamar
+        </a>
+        <a href="#" class="btn-shine cta-btn-outline">
+          <i data-lucide="instagram"></i> @estudio15
+        </a>
+        <a href="../index/index.html#agendar" class="btn-shine cta-btn-outline">
+          <i data-lucide="calendar-check"></i> Agendar online
+        </a>
+      </div>
+    </div>
+    <div id="contacto" class="contact-grid">
+      <div class="contact-card">
+        <i data-lucide="map-pin" class="contact-icon"></i>
+        <div class="contact-title">Ubicación</div>
+        <div class="contact-desc">Calle Principal 123, Centro</div>
+      </div>
+      <div class="contact-card">
+        <i data-lucide="clock" class="contact-icon"></i>
+        <div class="contact-title">Horario</div>
+        <div class="contact-desc">Lun–Sáb · 9:00 — 20:00</div>
+      </div>
+      <div class="contact-card">
+        <i data-lucide="phone" class="contact-icon"></i>
+        <div class="contact-title">Teléfono</div>
+        <div class="contact-desc">+1 (000) 000-0000</div>
+      </div>
+      <div class="contact-card">
+        <i data-lucide="instagram" class="contact-icon"></i>
+        <div class="contact-title">Instagram</div>
+        <div class="contact-desc">@estudio15.co</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER — inyectado por global.js
+     ============================================================ -->
+<div id="site-footer"></div>
+
+<!-- ============================================================
+     CARRITO DE COMPRAS — inyectado por global.js
+     ============================================================ -->
+<div id="site-cart"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.378.0/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../global/supabase-client.js"></script>
+<script src="../global/auth.js"></script>
+<script src="../global/global.js"></script>
+<script src="products.js"></script>
+
+</body>
+</html>

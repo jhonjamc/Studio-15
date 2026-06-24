@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTUDIO 15 - CREAR CUENTA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" />
+<link rel="stylesheet" href="../global/global.css">
+<link rel="stylesheet" href="../login/login.css">
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<section class="page-hero">
+  <div>
+    <span class="page-hero-tag"><span class="dot"></span> Únete</span>
+    <h1 class="page-hero-title">CREA TU<span class="accent-gradient">CUENTA</span></h1>
+    <p class="page-hero-desc">Regístrate para agendar citas, acumular cortes gratis y ver tu historial de compras.</p>
+  </div>
+</section>
+
+<section class="login-section">
+  <form class="form" id="register-form">
+    <div class="flex-column"><label>Nombre completo</label></div>
+    <div class="inputForm">
+      <input type="text" id="reg-name" class="input" placeholder="Escribe tu nombre completo" required>
+    </div>
+
+    <div class="flex-column"><label>Número celular</label></div>
+    <div class="inputForm">
+      <input type="tel" id="reg-phone" class="input" placeholder="+57 300 000 0000" required>
+    </div>
+
+    <div class="flex-column"><label>Email</label></div>
+    <div class="inputForm">
+      <input type="email" id="reg-email" class="input" placeholder="Escribe tu correo" required>
+    </div>
+
+    <div class="flex-column"><label>Contraseña</label></div>
+    <div class="inputForm">
+      <input type="password" id="reg-password" class="input" placeholder="Mínimo 6 caracteres" required>
+    </div>
+
+    <button type="submit" class="button-submit">Crear cuenta</button>
+    <p class="login-error" id="register-error"></p>
+
+    <p class="p">¿Ya tienes cuenta? <a href="../login/login.html" class="span">Inicia sesión</a></p>
+  </form>
+</section>
+
+<div id="site-footer"></div>
+<div id="site-cart"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.378.0/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../global/supabase-client.js"></script>
+<script src="../global/auth.js"></script>
+<script src="../global/global.js"></script>
+<script src="register.js"></script>
+
+</body>
+</html>
