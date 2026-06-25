@@ -57,6 +57,13 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    var redirectTo = sessionStorage.getItem("post_login_redirect");
+    if (redirectTo) {
+      sessionStorage.removeItem("post_login_redirect");
+      window.location.href = redirectTo;
+      return;
+    }
+
     window.location.href = ROLE_HOME[profile.role] || "../index/index.html";
   });
 
