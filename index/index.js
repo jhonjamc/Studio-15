@@ -442,39 +442,104 @@ async function initReviews() {
 }
 
 async function loadReviews() {
-  var listEl = document.getElementById("reviews-list");
+  var track = document.getElementById("reviewsTrack");
+  var wrap = document.getElementById("reviews-carousel-wrap");
 
   var { data, error } = await supabaseClient
     .from("reviews")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(6);
+    .limit(12);
 
   if (error) {
-    listEl.innerHTML = '<p class="reviews-empty">No se pudieron cargar las reseñas.</p>';
+    track.innerHTML = '<p class="reviews-empty">No se pudieron cargar las reseñas.</p>';
     console.error(error);
     return;
   }
 
   if (!data.length) {
-    listEl.innerHTML = '<p class="reviews-empty">Todavía no hay reseñas. ¡Sé el primero en dejar la tuya!</p>';
+    track.innerHTML = '<p class="reviews-empty">Todavía no hay reseñas. ¡Sé el primero en dejar la tuya!</p>';
+    document.getElementById("reviewsPrev").style.display = "none";
+    document.getElementById("reviewsNext").style.display = "none";
+    document.getElementById("reviewsDots").style.display = "none";
     return;
   }
 
-  listEl.innerHTML = "";
+  track.innerHTML = "";
   data.forEach(function (review) {
     var stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
     var date = new Date(review.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 
-    var card = document.createElement("article");
-    card.className = "review-card";
-    card.innerHTML =
-      '<div class="review-stars">' + stars + '</div>' +
-      (review.comment ? '<p class="review-comment">' + review.comment + '</p>' : '') +
-      '<p class="review-author">' + review.client_name + '</p>' +
-      '<p class="review-date">' + date + '</p>';
-    listEl.appendChild(card);
+    var slide = document.createElement("div");
+    slide.className = "carousel-slide";
+    slide.innerHTML =
+      '<article class="review-card">' +
+        '<div class="review-stars">' + stars + '</div>' +
+        (review.comment ? '<p class="review-comment">' + review.comment + '</p>' : '') +
+        '<p class="review-author">' + review.client_name + '</p>' +
+        '<p class="review-date">' + date + '</p>' +
+      '</article>';
+    track.appendChild(slide);
   });
+
+  setupReviewsCarousel();
+}
+
+function setupReviewsCarousel() {
+  var viewport = document.getElementById("reviewsViewport");
+  var track = document.getElementById("reviewsTrack");
+  var prevBtn = document.getElementById("reviewsPrev");
+  var nextBtn = document.getElementById("reviewsNext");
+  var dotsWrap = document.getElementById("reviewsDots");
+
+  prevBtn.style.display = "";
+  nextBtn.style.display = "";
+  dotsWrap.style.display = "";
+
+  var slides = Array.prototype.slice.call(track.children);
+  var current = 0;
+
+  function buildDots() {
+    dotsWrap.innerHTML = "";
+    slides.forEach(function (_, i) {
+      var dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "carousel-dot" + (i === 0 ? " active" : "");
+      dot.setAttribute("aria-label", "Ir a la reseña " + (i + 1));
+      dot.addEventListener("click", function () { goTo(i); });
+      dotsWrap.appendChild(dot);
+    });
+  }
+
+  function updateDots() {
+    dotsWrap.querySelectorAll(".carousel-dot").forEach(function (d, i) {
+      d.classList.toggle("active", i === current);
+    });
+  }
+
+  function slideWidth() {
+    return slides[0].getBoundingClientRect().width + 20;
+  }
+
+  function goTo(index) {
+    current = ((index % slides.length) + slides.length) % slides.length;
+    viewport.scrollTo({ left: current * slideWidth(), behavior: "smooth" });
+    updateDots();
+  }
+
+  buildDots();
+
+  nextBtn.onclick = function () { goTo(current + 1); };
+  prevBtn.onclick = function () { goTo(current - 1); };
+
+  var scrollTimeout;
+  viewport.onscroll = function () {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(function () {
+      var idx = Math.round(viewport.scrollLeft / slideWidth());
+      if (idx !== current) { current = idx; updateDots(); }
+    }, 100);
+  };
 }
 
 function setupReviewForm(profile) {

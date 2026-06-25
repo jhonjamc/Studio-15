@@ -464,8 +464,19 @@
       <a href="../login/login.html">Inicia sesión</a> para dejar tu propia reseña.
     </p>
 
-    <div class="reviews-grid" id="reviews-list">
-      <p class="reviews-empty">Cargando reseñas...</p>
+    <div class="carousel-wrap" id="reviews-carousel-wrap">
+      <div class="carousel-viewport" id="reviewsViewport">
+        <div class="carousel-track" id="reviewsTrack">
+          <p class="reviews-empty">Cargando reseñas...</p>
+        </div>
+      </div>
+      <button type="button" class="carousel-btn carousel-btn-prev" id="reviewsPrev" aria-label="Anterior">
+        <i data-lucide="chevron-left"></i>
+      </button>
+      <button type="button" class="carousel-btn carousel-btn-next" id="reviewsNext" aria-label="Siguiente">
+        <i data-lucide="chevron-right"></i>
+      </button>
+      <div class="carousel-dots" id="reviewsDots"></div>
     </div>
   </div>
 </section>

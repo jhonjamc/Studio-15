@@ -305,8 +305,10 @@ function initCart() {
   }
 
   /* --------------------------------------------------------
-     Finalizar compra: requiere login, guarda la compra en
-     Supabase (tabla purchases) y vacía el carrito.
+     Finalizar compra: requiere login, crea una preferencia de
+     pago en Mercado Pago, y manda al cliente a pagar ahí. Solo
+     cuando Mercado Pago confirma el pago (vía webhook en el
+     servidor) la compra queda como "approved".
      -------------------------------------------------------- */
   function showCheckoutMsg(msg, type) {
     var msgEl = document.getElementById("cartCheckoutMsg");
@@ -327,8 +329,6 @@ function initCart() {
       return;
     }
 
-    showCheckoutMsg("Procesando...", "");
-
     var profile = await getCurrentProfile();
     if (!profile) {
       showCheckoutMsg("Inicia sesión para completar tu compra. Te llevamos...", "error");
@@ -336,28 +336,80 @@ function initCart() {
       return;
     }
 
+    showCheckoutMsg("Preparando tu pago...", "");
+
     var total = cart.reduce(function (sum, item) { return sum + item.price * item.qty; }, 0);
     var items = cart.map(function (i) { return { name: i.name, price: i.price, qty: i.qty }; });
+    var reference = "estudio15-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
 
-    var { error } = await supabaseClient.from("purchases").insert({
+    // 1) Guardamos la compra como "pending" ANTES de pagar. Si el pago
+    //    nunca se confirma, se queda en pending para siempre (no se cuenta
+    //    en las ganancias del admin, que solo suman "approved").
+    var { error: insertError } = await supabaseClient.from("purchases").insert({
       client_id: profile.id,
       items: items,
       total: total,
+      status: "pending",
+      payment_reference: reference,
     });
 
-    if (error) {
-      showCheckoutMsg("No se pudo completar tu compra. Intenta de nuevo.", "error");
+    if (insertError) {
+      showCheckoutMsg("No se pudo iniciar tu compra. Intenta de nuevo.", "error");
+      console.error(insertError);
+      return;
+    }
+
+    // 2) Pedimos a nuestra Edge Function que cree la preferencia de pago
+    //    en Mercado Pago (el access token nunca toca el navegador).
+    var { data, error } = await supabaseClient.functions.invoke("mp-create-preference", {
+      body: { items: items, externalReference: reference, redirectUrl: window.location.href },
+    });
+
+    if (error || !data || !(data.init_point || data.sandbox_init_point)) {
+      showCheckoutMsg("No se pudo iniciar el pago. Intenta de nuevo.", "error");
       console.error(error);
       return;
     }
 
-    saveCart([]);
-    renderCart();
-    showCheckoutMsg("¡Compra realizada! Ya la puedes ver en tu historial.", "ok");
-    setTimeout(function () {
-      showCheckoutMsg("", "");
-      closeCart();
-    }, 2200);
+    // 3) Mandamos al cliente a pagar en la página de Mercado Pago.
+    //    Cuando termine, vuelve a esta misma página (redirectUrl).
+    window.location.href = data.init_point || data.sandbox_init_point;
+  }
+
+  /* --------------------------------------------------------
+     Cuando Mercado Pago redirige de vuelta después de pagar,
+     llega con parámetros en la URL (status, external_reference,
+     etc). Los leemos para avisarle algo al instante, aunque el
+     estado real y definitivo lo confirma el webhook en el servidor.
+     -------------------------------------------------------- */
+  function checkPaymentReturn() {
+    var params = new URLSearchParams(window.location.search);
+    var status = params.get("status") || params.get("collection_status");
+    if (!status) return;
+
+    openCart();
+    if (status === "approved") {
+      showCheckoutMsg("¡Pago aprobado! Ya lo puedes ver en tu historial.", "ok");
+      saveCart([]);
+      renderCart();
+    } else if (status === "pending" || status === "in_process") {
+      showCheckoutMsg("Tu pago está siendo procesado. Te avisaremos.", "ok");
+      saveCart([]);
+      renderCart();
+    } else {
+      showCheckoutMsg("El pago no se completó. Tu carrito sigue intacto.", "error");
+    }
+
+    [
+      "collection_id", "collection_status", "payment_id", "status", "external_reference",
+      "payment_type", "merchant_order_id", "preference_id", "site_id",
+      "processing_mode", "merchant_account_id",
+    ].forEach(function (key) { params.delete(key); });
+
+    var cleanUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "") + window.location.hash;
+    window.history.replaceState({}, "", cleanUrl);
+
+    setTimeout(function () { showCheckoutMsg("", ""); }, 4000);
   }
 
   /* --------------------------------------------------------
@@ -395,4 +447,5 @@ function initCart() {
   });
 
   renderCart();
+  checkPaymentReturn();
 }
