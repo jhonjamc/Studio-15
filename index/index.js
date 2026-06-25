@@ -101,6 +101,14 @@ async function initBookingWidget() {
   var nav = document.getElementById("booking-nav");
 
   var profile = await getCurrentProfile();
+
+  var gateLoginLink = document.getElementById("booking-gate-login-link");
+  if (gateLoginLink) {
+    gateLoginLink.addEventListener("click", function () {
+      sessionStorage.setItem("post_login_redirect", window.location.pathname + "#agendar");
+    });
+  }
+
   if (!profile) {
     gate.style.display = "block";
     stepsHeader.style.display = "none";

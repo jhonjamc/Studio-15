@@ -86,6 +86,14 @@ create table if not exists public.appointments (
 create index if not exists idx_appointments_employee on public.appointments(employee_id);
 create index if not exists idx_appointments_client on public.appointments(client_id);
 
+-- Impide guardar dos citas ACTIVAS (pendiente o confirmada) con el mismo
+-- barbero, misma fecha y misma hora. Esto es la red de seguridad final:
+-- aunque el front-end falle o dos personas confirmen al mismo tiempo,
+-- la base de datos rechaza la segunda.
+create unique index if not exists uniq_active_appointment_slot
+  on public.appointments (employee_id, appointment_date, appointment_time)
+  where status in ('pending', 'accepted');
+
 -- Mantener updated_at al día en cada cambio de estado
 create or replace function public.set_updated_at()
 returns trigger as $$
@@ -211,6 +219,13 @@ $$ language sql security definer set search_path = public;
 drop policy if exists "profiles_select_own_or_admin" on public.profiles;
 create policy "profiles_select_own_or_admin" on public.profiles
   for select using (id = auth.uid() or public.is_admin());
+
+-- Cualquier usuario logueado necesita ver la lista de barberos (admin +
+-- empleados) para poder elegir uno al agendar. Esto NO expone otros
+-- clientes, solo perfiles con role admin/employee.
+drop policy if exists "profiles_select_staff_public" on public.profiles;
+create policy "profiles_select_staff_public" on public.profiles
+  for select using (role in ('admin', 'employee'));
 
 drop policy if exists "profiles_update_own_or_admin" on public.profiles;
 create policy "profiles_update_own_or_admin" on public.profiles

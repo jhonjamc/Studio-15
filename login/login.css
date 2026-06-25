@@ -55,6 +55,9 @@
   padding-left: 10px;
   transition: 0.2s ease-in-out;
 }
+.inputForm svg, .inputForm-icon {
+  width: 20px; height: 20px; flex-shrink: 0; color: #151717;
+}
 .inputForm:focus-within { border: 1.5px solid var(--color-blue); }
 
 .input {
@@ -64,6 +67,7 @@
   width: 85%;
   height: 100%;
   font-family: var(--font-sans);
+  font-size: 16px; /* evita que iOS haga zoom automático al enfocar el input */
 }
 .input:focus { outline: none; }
 
@@ -109,6 +113,7 @@
   text-align: center; color: var(--color-red); font-size: 13px;
   font-weight: 600; min-height: 1.2em; margin: 0;
 }
+.login-error.ok { color: #2ecc71; }
 
 .btn {
   margin-top: 10px;

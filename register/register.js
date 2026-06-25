@@ -55,8 +55,16 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    alert("Cuenta creada. Revisa tu correo para confirmar (si tu proyecto lo requiere) y luego inicia sesión.");
-    window.location.href = "../login/login.html";
+    submitBtn.disabled = false;
+    submitBtn.textContent = "¡Cuenta creada!";
+
+    errorEl.classList.remove("error");
+    errorEl.classList.add("ok");
+    errorEl.textContent = "Listo. Te llevamos a iniciar sesión...";
+
+    setTimeout(function () {
+      window.location.href = "../login/login.html";
+    }, 1500);
   });
 
 });

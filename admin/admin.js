@@ -182,7 +182,9 @@ async function loadEarnings() {
   document.getElementById("kpi-employees-total").textContent = "$" + totalEmployees.toFixed(2);
   document.getElementById("kpi-admin-total").textContent = "$" + totalAdmin.toFixed(2);
 
-  var maxEarning = Math.max.apply(null, Object.values(byEmployee).map(function (v) { return v.earning; }).concat([0.01]));
+  var maxEarning = Math.max.apply(null, Object.keys(byEmployee).map(function (id) {
+    return id === currentAdminId ? byEmployee[id].earning + byEmployee[id].shop : byEmployee[id].earning;
+  }).concat([0.01]));
 
   var ids = Object.keys(byEmployee);
   if (!ids.length) {
@@ -194,7 +196,9 @@ async function loadEarnings() {
   ids.forEach(function (id) {
     var name = profilesById[id] ? profilesById[id].full_name : "—";
     var isAdmin = id === currentAdminId;
-    var value = byEmployee[id].earning;
+    // Para el admin, sus citas son 100% para él (su comisión + lo que
+    // normalmente queda para "el negocio", porque el negocio es él).
+    var value = isAdmin ? byEmployee[id].earning + byEmployee[id].shop : byEmployee[id].earning;
     var pct = (value / maxEarning) * 100;
 
     var row = document.createElement("div");
