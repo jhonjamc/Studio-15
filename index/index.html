@@ -50,12 +50,12 @@
           <div class="stat-v">Años</div>
         </div>
         <div class="stat-card">
-          <div class="stat-k">5K</div>
+          <div class="stat-k" id="stat-clients">—</div>
           <div class="stat-v">Clientes</div>
         </div>
         <div class="stat-card">
-          <div class="stat-k">4.9★</div>
-          <div class="stat-v">Reseñas</div>
+          <div class="stat-k" id="stat-rating">—</div>
+          <div class="stat-v" id="stat-rating-label">Reseñas</div>
         </div>
       </div>
     </div>
@@ -199,6 +199,39 @@
       </button>
 
       <div class="carousel-dots" id="carouselDots"></div>
+    </div>
+  </div>
+</section>
+
+<section id="resenas" class="section section-dark">
+  <div class="hero-bg-diagonals dark"></div>
+  <div class="section-inner">
+    <header class="section-header">
+      <div class="kicker"><span class="kicker-line"></span><span class="kicker-text inverted">Reseñas</span></div>
+      <h2 class="section-title">Lo que dicen nuestros clientes</h2>
+    </header>
+    <p class="section-sub">Reseñas reales de clientes reales. Si ya viniste, cuéntanos cómo te fue.</p>
+
+    <!-- Formulario para dejar reseña: solo visible si hay sesión activa -->
+    <div class="review-form-card" id="review-form-card" style="display:none;">
+      <p class="review-form-title">Deja tu reseña</p>
+      <div class="star-picker" id="star-picker">
+        <button type="button" class="star-btn" data-value="1" aria-label="1 estrella">★</button>
+        <button type="button" class="star-btn" data-value="2" aria-label="2 estrellas">★</button>
+        <button type="button" class="star-btn" data-value="3" aria-label="3 estrellas">★</button>
+        <button type="button" class="star-btn" data-value="4" aria-label="4 estrellas">★</button>
+        <button type="button" class="star-btn" data-value="5" aria-label="5 estrellas">★</button>
+      </div>
+      <textarea id="review-comment" class="review-textarea" rows="2" placeholder="Cuéntanos cómo te fue (opcional)"></textarea>
+      <button type="button" class="btn-shine btn-primary-pill" id="review-submit-btn">Publicar reseña</button>
+      <p class="review-form-msg" id="review-form-msg"></p>
+    </div>
+    <p class="review-login-hint" id="review-login-hint">
+      <a href="../login/login.html">Inicia sesión</a> para dejar tu propia reseña.
+    </p>
+
+    <div class="reviews-grid" id="reviews-list">
+      <p class="reviews-empty">Cargando reseñas...</p>
     </div>
   </div>
 </section>

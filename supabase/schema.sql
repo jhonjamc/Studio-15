@@ -8,10 +8,12 @@
 -- 2. Tabla services
 -- 3. Tabla appointments (citas)
 -- 4. Tabla purchases (historial de compras)
--- 5. Trigger: crear profile automático al registrarse
--- 6. Trigger: contador de cortes para la barra de fidelidad
--- 7. Vista de ganancias (appointment_earnings)
--- 8. RLS (seguridad por fila)
+-- 5. Tabla reviews (reseñas públicas)
+-- 6. Trigger: crear profile automático al registrarse
+-- 7. Trigger: contador de cortes para la barra de fidelidad
+-- 8. Vista de ganancias (appointment_earnings)
+-- 9. RLS (seguridad por fila)
+-- 10. Función pública de estadísticas (clientes y reseñas para el home)
 -- ============================================================================
 
 
@@ -126,7 +128,24 @@ create index if not exists idx_purchases_client on public.purchases(client_id);
 
 
 -- ============================================================
--- 5. TRIGGER: crear profile automático al registrarse
+-- 5. REVIEWS
+-- Reseñas públicas que se muestran en el home (estrellas + comentario).
+-- Cualquiera las puede leer; solo un cliente logueado puede crear la suya.
+-- ============================================================
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references public.profiles(id),
+  client_name text not null,
+  rating integer not null check (rating between 1 and 5),
+  comment text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_reviews_created on public.reviews(created_at desc);
+
+
+-- ============================================================
+-- 6. TRIGGER: crear profile automático al registrarse
 -- Todo el que se registra desde register.html entra como
 -- 'client'. Los empleados/admin se promueven manualmente desde
 -- el panel de admin (ver ADMIN_GUIA.md).
@@ -152,7 +171,7 @@ create trigger on_auth_user_created
 
 
 -- ============================================================
--- 6. TRIGGER: contador de cortes (fidelidad)
+-- 7. TRIGGER: contador de cortes (fidelidad)
 -- Cuando una cita pasa a 'completed', suma 1 al contador del
 -- cliente. La barra de progreso en el panel del cliente muestra
 -- completed_cuts % 6 (0 a 5, y al llegar a 5 el próximo es gratis).
@@ -176,7 +195,7 @@ create trigger trg_appointment_completed
 
 
 -- ============================================================
--- 7. VISTA DE GANANCIAS
+-- 8. VISTA DE GANANCIAS
 -- performer_earning = lo que se gana quien hizo el corte (admin o empleado)
 -- shop_earning      = lo que queda para el negocio (la diferencia)
 -- Solo cuenta citas con status = 'completed'.
@@ -200,12 +219,13 @@ where a.status = 'completed';
 
 
 -- ============================================================
--- 8. RLS (seguridad por fila)
+-- 9. RLS (seguridad por fila)
 -- ============================================================
 alter table public.profiles enable row level security;
 alter table public.services enable row level security;
 alter table public.appointments enable row level security;
 alter table public.purchases enable row level security;
+alter table public.reviews enable row level security;
 
 -- Función auxiliar: ¿el usuario actual es admin?
 create or replace function public.is_admin()
@@ -267,3 +287,37 @@ create policy "purchases_select_own_or_admin" on public.purchases
 drop policy if exists "purchases_insert_own" on public.purchases;
 create policy "purchases_insert_own" on public.purchases
   for insert with check (client_id = auth.uid());
+
+-- ---------- reviews ----------
+-- Públicas para lectura (se muestran en el home a cualquiera).
+drop policy if exists "reviews_select_all" on public.reviews;
+create policy "reviews_select_all" on public.reviews
+  for select using (true);
+
+drop policy if exists "reviews_insert_own" on public.reviews;
+create policy "reviews_insert_own" on public.reviews
+  for insert with check (client_id = auth.uid());
+
+
+-- ============================================================
+-- 10. FUNCIÓN PÚBLICA DE ESTADÍSTICAS
+-- El home necesita mostrar "cuántos clientes" y "promedio de
+-- estrellas", pero un visitante (o cliente normal) no puede leer
+-- la tabla profiles completa por RLS. Esta función SOLO devuelve
+-- números agregados (nunca filas con datos personales), y corre
+-- con permisos elevados (security definer) para poder contarlos.
+-- ============================================================
+create or replace function public.get_public_stats()
+returns json
+language sql
+security definer
+set search_path = public
+as $$
+  select json_build_object(
+    'client_count', (select count(*) from public.profiles where role = 'client'),
+    'review_count', (select count(*) from public.reviews),
+    'avg_rating', (select coalesce(round(avg(rating)::numeric, 1), 0) from public.reviews)
+  );
+$$;
+
+grant execute on function public.get_public_stats() to anon, authenticated;

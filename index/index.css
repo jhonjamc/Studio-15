@@ -428,3 +428,54 @@
   cursor: pointer; transition: transform .2s;
 }
 .checkout-btn:hover { transform: scale(1.05); }
+
+
+/* ============================================================
+   7. RESEÑAS
+   ============================================================ */
+.review-form-card {
+  max-width: 560px; margin: 40px auto 0;
+  background: rgba(245,236,221,0.04); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-lg); padding: 24px;
+}
+.review-form-title { font-weight: 700; margin: 0 0 12px; color: var(--color-cream); }
+
+.star-picker { display: flex; gap: 6px; margin-bottom: 14px; }
+.star-btn {
+  font-size: 1.8rem; line-height: 1; color: rgba(245,236,221,0.25);
+  transition: color .15s, transform .15s; cursor: pointer;
+}
+.star-btn:hover { transform: scale(1.15); }
+.star-btn.active { color: var(--color-red-glow); }
+
+.review-textarea {
+  width: 100%; border: 1.5px solid rgba(255,255,255,0.15); border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: 16px; font-family: var(--font-sans);
+  background: rgba(0,0,0,0.25); color: var(--color-cream); resize: vertical;
+  margin-bottom: 14px;
+}
+.review-textarea:focus { outline: none; border-color: var(--color-red); }
+
+.review-form-msg { font-size: .82rem; font-weight: 600; min-height: 1.2em; margin-top: 10px; }
+.review-form-msg.ok { color: #2ecc71; }
+.review-form-msg.error { color: var(--color-red-glow); }
+
+.review-login-hint {
+  max-width: 560px; margin: 32px auto 0; text-align: center;
+  color: rgba(245,236,221,0.7); font-size: .9rem;
+}
+.review-login-hint a { color: var(--color-red-glow); font-weight: 700; }
+
+.reviews-grid { margin-top: 40px; display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 768px) { .reviews-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.review-card {
+  border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-md); padding: 20px;
+}
+.review-stars { color: var(--color-red-glow); font-size: 1rem; letter-spacing: 2px; }
+.review-comment { margin-top: 10px; color: rgba(245,236,221,0.85); font-size: .9rem; line-height: 1.5; }
+.review-author { margin-top: 14px; font-weight: 700; font-size: .85rem; color: var(--color-cream); }
+.review-date { font-size: .72rem; color: rgba(245,236,221,0.5); }
+
+.reviews-empty { color: rgba(245,236,221,0.6); text-align: center; grid-column: 1 / -1; }

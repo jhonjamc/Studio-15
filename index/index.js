@@ -90,6 +90,12 @@ document.addEventListener("DOMContentLoaded", function () {
      2. WIDGET DE AGENDAMIENTO
      ============================================================ */
   initBookingWidget();
+
+  /* ============================================================
+     3. STATS DEL HERO + RESEÑAS
+     ============================================================ */
+  loadHeroStats();
+  initReviews();
 });
 
 async function initBookingWidget() {
@@ -369,4 +375,159 @@ async function initBookingWidget() {
   });
 
   renderStep();
+}
+
+
+/* ============================================================================
+   STATS DEL HERO (clientes reales + promedio de estrellas real)
+   Usa la función get_public_stats() de Supabase, que solo devuelve
+   números agregados (no expone perfiles ni reseñas completas).
+   ============================================================================ */
+async function loadHeroStats() {
+  var clientsEl = document.getElementById("stat-clients");
+  var ratingEl = document.getElementById("stat-rating");
+  var ratingLabelEl = document.getElementById("stat-rating-label");
+  if (!clientsEl || !ratingEl) return;
+
+  try {
+    var { data, error } = await supabaseClient.rpc("get_public_stats");
+    if (error || !data) throw error;
+
+    clientsEl.textContent = formatCount(data.client_count);
+
+    if (data.review_count > 0) {
+      ratingEl.textContent = Number(data.avg_rating).toFixed(1) + "★";
+      ratingLabelEl.textContent = "Reseñas (" + data.review_count + ")";
+    } else {
+      ratingEl.textContent = "—";
+      ratingLabelEl.textContent = "Sin reseñas aún";
+    }
+  } catch (e) {
+    console.error("Error cargando stats:", e);
+    clientsEl.textContent = "—";
+    ratingEl.textContent = "—";
+  }
+}
+
+function formatCount(n) {
+  n = Number(n) || 0;
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(".0", "") + "k";
+  return String(n);
+}
+
+
+/* ============================================================================
+   RESEÑAS — panel público + formulario para clientes logueados
+   ============================================================================ */
+async function initReviews() {
+  var listEl = document.getElementById("reviews-list");
+  var formCard = document.getElementById("review-form-card");
+  var loginHint = document.getElementById("review-login-hint");
+  if (!listEl) return;
+
+  await loadReviews();
+
+  if (typeof getCurrentProfile !== "function") return;
+  var profile = await getCurrentProfile();
+
+  if (!profile) {
+    formCard.style.display = "none";
+    loginHint.style.display = "block";
+    return;
+  }
+
+  loginHint.style.display = "none";
+  formCard.style.display = "block";
+  setupReviewForm(profile);
+}
+
+async function loadReviews() {
+  var listEl = document.getElementById("reviews-list");
+
+  var { data, error } = await supabaseClient
+    .from("reviews")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(6);
+
+  if (error) {
+    listEl.innerHTML = '<p class="reviews-empty">No se pudieron cargar las reseñas.</p>';
+    console.error(error);
+    return;
+  }
+
+  if (!data.length) {
+    listEl.innerHTML = '<p class="reviews-empty">Todavía no hay reseñas. ¡Sé el primero en dejar la tuya!</p>';
+    return;
+  }
+
+  listEl.innerHTML = "";
+  data.forEach(function (review) {
+    var stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+    var date = new Date(review.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+
+    var card = document.createElement("article");
+    card.className = "review-card";
+    card.innerHTML =
+      '<div class="review-stars">' + stars + '</div>' +
+      (review.comment ? '<p class="review-comment">' + review.comment + '</p>' : '') +
+      '<p class="review-author">' + review.client_name + '</p>' +
+      '<p class="review-date">' + date + '</p>';
+    listEl.appendChild(card);
+  });
+}
+
+function setupReviewForm(profile) {
+  var starBtns = document.querySelectorAll("#star-picker .star-btn");
+  var commentInput = document.getElementById("review-comment");
+  var submitBtn = document.getElementById("review-submit-btn");
+  var msgEl = document.getElementById("review-form-msg");
+  var selectedRating = 0;
+
+  starBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      selectedRating = parseInt(btn.dataset.value, 10);
+      starBtns.forEach(function (b) {
+        b.classList.toggle("active", parseInt(b.dataset.value, 10) <= selectedRating);
+      });
+    });
+  });
+
+  submitBtn.addEventListener("click", async function () {
+    msgEl.textContent = "";
+    msgEl.className = "review-form-msg";
+
+    if (!selectedRating) {
+      msgEl.textContent = "Selecciona cuántas estrellas quieres dejar.";
+      msgEl.classList.add("error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+
+    var { error } = await supabaseClient.from("reviews").insert({
+      client_id: profile.id,
+      client_name: profile.full_name || "Cliente",
+      rating: selectedRating,
+      comment: commentInput.value.trim() || null,
+    });
+
+    submitBtn.disabled = false;
+
+    if (error) {
+      msgEl.textContent = "No se pudo publicar tu reseña. Intenta de nuevo.";
+      msgEl.classList.add("error");
+      console.error(error);
+      return;
+    }
+
+    msgEl.textContent = "¡Gracias por tu reseña!";
+    msgEl.classList.add("ok");
+    commentInput.value = "";
+    selectedRating = 0;
+    starBtns.forEach(function (b) { b.classList.remove("active"); });
+
+    await loadReviews();
+    await loadHeroStats();
+  });
 }
