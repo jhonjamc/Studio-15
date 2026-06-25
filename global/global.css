@@ -89,6 +89,8 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
+body.no-scroll { overflow: hidden; }
+
 body {
   margin: 0;
   background: var(--color-bg);
@@ -330,6 +332,14 @@ i[data-lucide] { width: 18px; height: 18px; }
   box-shadow: var(--shadow-pop); transition: transform .2s;
 }
 .cart-checkout-btn:hover { transform: scale(1.02); }
+
+.cart-checkout-msg {
+  margin-top: 10px; text-align: center;
+  font-size: .8rem; font-weight: 600; min-height: 1.2em;
+  color: var(--color-text-muted);
+}
+.cart-checkout-msg.ok { color: #2ecc71; }
+.cart-checkout-msg.error { color: var(--color-red); }
 
 
 /* ============================================================

@@ -25,11 +25,11 @@
       <button type="button" class="logout-btn" data-logout><i data-lucide="log-out"></i> Cerrar sesión</button>
     </div>
 
-    <!-- ===================== KPIs GENERALES ===================== -->
+    <!-- ===================== KPIs GENERALES (CITAS) ===================== -->
     <div class="dashboard-block">
       <div class="cards-grid cols-4">
         <div class="dash-card">
-          <p class="dash-card-label">Ingresos totales</p>
+          <p class="dash-card-label">Ingresos por citas</p>
           <p class="dash-card-value" id="kpi-revenue">$0.00</p>
           <p class="dash-card-sub">Citas completadas</p>
         </div>
@@ -38,13 +38,34 @@
           <p class="dash-card-value" id="kpi-employees-total">$0.00</p>
         </div>
         <div class="dash-card">
-          <p class="dash-card-label">Para ti</p>
+          <p class="dash-card-label">Para ti (de citas)</p>
           <p class="dash-card-value" id="kpi-admin-total">$0.00</p>
           <p class="dash-card-sub">Tu corte + lo que queda del negocio</p>
         </div>
         <div class="dash-card">
           <p class="dash-card-label">Citas pendientes</p>
           <p class="dash-card-value" id="kpi-pending-count">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== VENTAS DE LA TIENDA (PRODUCTOS) ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="shopping-bag"></i> Ventas de la tienda (productos)</h2>
+      <div class="cards-grid cols-3">
+        <div class="dash-card">
+          <p class="dash-card-label">Ingresos por productos</p>
+          <p class="dash-card-value" id="kpi-products-total">$0.00</p>
+          <p class="dash-card-sub">100% para ti, no se reparte</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Compras registradas</p>
+          <p class="dash-card-value" id="kpi-products-count">0</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Ganancia total real</p>
+          <p class="dash-card-value" id="kpi-grand-total">$0.00</p>
+          <p class="dash-card-sub">Citas + productos, todo lo tuyo</p>
         </div>
       </div>
     </div>

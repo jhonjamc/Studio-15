@@ -103,6 +103,7 @@ var CART_TEMPLATE = `
   <div class="cart-drawer-footer">
     <div class="cart-total-row"><span>Total</span><span id="cartTotal">$0.00</span></div>
     <button type="button" class="btn-shine cart-checkout-btn">Finalizar compra</button>
+    <p class="cart-checkout-msg" id="cartCheckoutMsg"></p>
   </div>
 </aside>
 `;
@@ -208,11 +209,15 @@ function initCart() {
     drawer.classList.add("open");
     overlay.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
+    document.body.classList.add("no-scroll");
+    var msgEl = document.getElementById("cartCheckoutMsg");
+    if (msgEl) { msgEl.textContent = ""; msgEl.className = "cart-checkout-msg"; }
   }
   function closeCart() {
     drawer.classList.remove("open");
     overlay.classList.remove("open");
     drawer.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("no-scroll");
   }
 
   trigger && trigger.addEventListener("click", openCart);
@@ -303,22 +308,31 @@ function initCart() {
      Finalizar compra: requiere login, guarda la compra en
      Supabase (tabla purchases) y vacía el carrito.
      -------------------------------------------------------- */
+  function showCheckoutMsg(msg, type) {
+    var msgEl = document.getElementById("cartCheckoutMsg");
+    if (!msgEl) return;
+    msgEl.textContent = msg;
+    msgEl.className = "cart-checkout-msg" + (type ? " " + type : "");
+  }
+
   async function handleCheckout() {
     var cart = getCart();
     if (!cart.length) {
-      alert("Tu carrito está vacío.");
+      showCheckoutMsg("Tu carrito está vacío. Agrega algo antes de comprar.", "error");
       return;
     }
 
     if (typeof supabaseClient === "undefined" || typeof getCurrentProfile !== "function") {
-      alert("No se pudo conectar con la tienda. Intenta de nuevo más tarde.");
+      showCheckoutMsg("No se pudo conectar con la tienda. Intenta más tarde.", "error");
       return;
     }
 
+    showCheckoutMsg("Procesando...", "");
+
     var profile = await getCurrentProfile();
     if (!profile) {
-      alert("Inicia sesión para completar tu compra.");
-      window.location.href = "../login/login.html";
+      showCheckoutMsg("Inicia sesión para completar tu compra. Te llevamos...", "error");
+      setTimeout(function () { window.location.href = "../login/login.html"; }, 1400);
       return;
     }
 
@@ -332,15 +346,18 @@ function initCart() {
     });
 
     if (error) {
-      alert("No se pudo completar tu compra. Intenta de nuevo.");
+      showCheckoutMsg("No se pudo completar tu compra. Intenta de nuevo.", "error");
       console.error(error);
       return;
     }
 
     saveCart([]);
     renderCart();
-    closeCart();
-    alert("¡Compra realizada! La puedes ver en tu historial.");
+    showCheckoutMsg("¡Compra realizada! Ya la puedes ver en tu historial.", "ok");
+    setTimeout(function () {
+      showCheckoutMsg("", "");
+      closeCart();
+    }, 2200);
   }
 
   /* --------------------------------------------------------

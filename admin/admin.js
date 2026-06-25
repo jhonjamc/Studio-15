@@ -26,7 +26,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   await loadProfilesCache();
   await loadAppointments();
-  await loadEarnings();
+  var citasAdminTotal = await loadEarnings();
+  await loadProductSales(citasAdminTotal);
   await loadClientsLoyalty();
   setupLinkEmployeeForm();
 
@@ -153,7 +154,7 @@ async function loadEarnings() {
   if (error) {
     card.innerHTML = '<p class="dashboard-empty">No se pudieron cargar las ganancias.</p>';
     console.error(error);
-    return;
+    return 0;
   }
 
   var totalRevenue = 0;
@@ -181,7 +182,6 @@ async function loadEarnings() {
   document.getElementById("kpi-revenue").textContent = "$" + totalRevenue.toFixed(2);
   document.getElementById("kpi-employees-total").textContent = "$" + totalEmployees.toFixed(2);
   document.getElementById("kpi-admin-total").textContent = "$" + totalAdmin.toFixed(2);
-
   var maxEarning = Math.max.apply(null, Object.keys(byEmployee).map(function (id) {
     return id === currentAdminId ? byEmployee[id].earning + byEmployee[id].shop : byEmployee[id].earning;
   }).concat([0.01]));
@@ -189,7 +189,7 @@ async function loadEarnings() {
   var ids = Object.keys(byEmployee);
   if (!ids.length) {
     card.innerHTML = '<p class="dashboard-empty">Todavía no hay citas completadas.</p>';
-    return;
+    return totalAdmin;
   }
 
   card.innerHTML = "";
@@ -211,6 +211,28 @@ async function loadEarnings() {
       '<div class="earnings-track"><div class="earnings-fill' + (isAdmin ? " blue" : "") + '" style="width:' + pct + '%"></div></div>';
     card.appendChild(row);
   });
+
+  return totalAdmin;
+}
+
+
+/* ============================================================
+   VENTAS DE LA TIENDA (PRODUCTOS) — 100% para el admin, aparte
+   de lo que se reparte en las citas.
+   ============================================================ */
+async function loadProductSales(citasAdminTotal) {
+  var { data, error } = await supabaseClient.from("purchases").select("total");
+
+  var totalProducts = 0;
+  if (!error && data) {
+    totalProducts = data.reduce(function (sum, p) { return sum + Number(p.total); }, 0);
+  } else if (error) {
+    console.error(error);
+  }
+
+  document.getElementById("kpi-products-total").textContent = "$" + totalProducts.toFixed(2);
+  document.getElementById("kpi-products-count").textContent = (data ? data.length : 0);
+  document.getElementById("kpi-grand-total").textContent = "$" + (Number(citasAdminTotal || 0) + totalProducts).toFixed(2);
 }
 
 
