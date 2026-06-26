@@ -2,12 +2,100 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=index/index.html">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="3; url=index/index.html">
 <title>ESTUDIO 15</title>
 <link rel="canonical" href="index/index.html">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@500;700&display=swap" />
+<style>
+  :root {
+    --barber-red: #d4282c;
+    --barber-blue: #1c4dd4;
+    --color-bg: #0a0a0f;
+    --color-border: #222533;
+    --color-cream: #f5dddd;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--color-bg);
+    font-family: "Inter", sans-serif;
+    overflow: hidden;
+  }
+  .loader-screen {
+    height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 36px;
+  }
+  .loader-logo {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 2.4rem; letter-spacing: .06em; color: var(--color-cream);
+    display: flex; align-items: center; gap: 10px;
+    animation: fadeIn .6s ease both;
+  }
+  .loader-logo .accent { color: var(--barber-red); }
+  .loader-logo-icon {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--barber-red) 0%, #ffffff 50%, var(--barber-blue) 100%);
+  }
+
+  .loader-track-wrap { position: relative; width: min(300px, 70vw); }
+  .loader-track {
+    height: 12px; width: 100%; border-radius: 999px;
+    background: #14141c; border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+  .loader-fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: repeating-linear-gradient(45deg, var(--barber-red) 0 10px, #ffffff 10px 20px, var(--barber-blue) 20px 30px);
+    background-size: 30px 30px;
+    animation: fillGrow 2.5s linear forwards, poleScroll 1s linear infinite;
+  }
+  .loader-scissors {
+    position: absolute; top: -26px; left: 0;
+    font-size: 22px; line-height: 1;
+    transform: translate(-50%, 0) rotate(90deg);
+    animation: scissorsMove 2.5s linear forwards, scissorsSnip .35s ease-in-out infinite;
+  }
+
+  .loader-label {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .2em;
+    color: #756b5d; animation: fadeIn .8s ease both;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes poleScroll { from { background-position: 0 0; } to { background-position: 30px 0; } }
+  @keyframes fillGrow { from { width: 0%; } to { width: 100%; } }
+  @keyframes scissorsMove { from { left: 0%; } to { left: 100%; } }
+  @keyframes scissorsSnip {
+    0%, 100% { transform: translate(-50%, 0) rotate(80deg); }
+    50% { transform: translate(-50%, 0) rotate(100deg); }
+  }
+</style>
 </head>
 <body>
-  <p>Redirigiendo... si no avanza, <a href="index/index.html">haz clic aquí</a>.</p>
-  <script>window.location.replace("index/index.html");</script>
+
+  <div class="loader-screen">
+    <div class="loader-logo">
+      <span class="loader-logo-icon"></span>
+      BARBERÍA <span class="accent">ESTUDIO 15</span>
+    </div>
+
+    <div class="loader-track-wrap">
+      <div class="loader-track"><div class="loader-fill"></div></div>
+      <div class="loader-scissors">✂️</div>
+    </div>
+
+    <p class="loader-label">Cargando...</p>
+  </div>
+
+  <script>
+    setTimeout(function () {
+      window.location.replace("index/index.html");
+    }, 2500);
+  </script>
+
 </body>
 </html>
