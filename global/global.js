@@ -82,7 +82,7 @@ var FOOTER_TEMPLATE = `
     <div class="footer-col">
       <h4 class="footer-col-title">Contacto</h4>
       <p><i data-lucide="map-pin"></i> Calle Principal 123, Centro</p>
-      <p><i data-lucide="clock"></i> Lun–Sáb · 9:00 — 20:00</p>
+      <p><i data-lucide="clock"></i> Todos los días · 8:30 AM — 8:30 PM</p>
       <p><i data-lucide="phone"></i> +1 (000) 000-0000</p>
     </div>
 
@@ -296,9 +296,14 @@ function initCart() {
     }
     saveCart(cart);
     renderCart();
-    openCart();
-  }
 
+    var countEl = document.getElementById("cartCount");
+    if (countEl) {
+      countEl.classList.remove("bump");
+      void countEl.offsetWidth; // reinicia la animación si se agrega rápido varias veces
+      countEl.classList.add("bump");
+    }
+  }
   function changeQty(id, delta) {
     var cart = getCart();
     var item = cart.find(function (i) { return i.id === id; });

@@ -96,6 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
      ============================================================ */
   loadHeroStats();
   initReviews();
+  updateOpenStatus();
 });
 
 async function initBookingWidget() {
@@ -420,10 +421,10 @@ function formatCount(n) {
    RESEÑAS — panel público + formulario para clientes logueados
    ============================================================================ */
 async function initReviews() {
-  var listEl = document.getElementById("reviews-list");
+  var trackEl = document.getElementById("reviewsTrack");
   var formCard = document.getElementById("review-form-card");
   var loginHint = document.getElementById("review-login-hint");
-  if (!listEl) return;
+  if (!trackEl) return;
 
   await loadReviews();
 
@@ -595,4 +596,29 @@ function setupReviewForm(profile) {
     await loadReviews();
     await loadHeroStats();
   });
+}
+
+
+/* ============================================================================
+   HORARIO REAL: Todos los días de 8:30 AM a 8:30 PM
+   ============================================================================ */
+function updateOpenStatus() {
+  var badge = document.getElementById("open-status-badge");
+  var dot = document.getElementById("open-status-dot");
+  var textEl = document.getElementById("open-status-text");
+  if (!badge) return;
+
+  var OPEN_HOUR = 8, OPEN_MIN = 30;
+  var CLOSE_HOUR = 20, CLOSE_MIN = 30;
+
+  var now = new Date();
+  var minutesNow = now.getHours() * 60 + now.getMinutes();
+  var openMinutes = OPEN_HOUR * 60 + OPEN_MIN;
+  var closeMinutes = CLOSE_HOUR * 60 + CLOSE_MIN;
+  var isOpen = minutesNow >= openMinutes && minutesNow < closeMinutes;
+
+  textEl.textContent = (isOpen ? "Abierto ahora" : "Cerrado ahora") + " · 8:30 AM — 8:30 PM";
+  badge.classList.toggle("is-closed", !isOpen);
+  dot.style.background = isOpen ? "#2ecc71" : "var(--color-red)";
+  dot.style.animationPlayState = isOpen ? "running" : "paused";
 }

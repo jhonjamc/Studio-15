@@ -96,7 +96,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  overflow-x: hidden;
+  overflow-x: clip; /* "hidden" rompe el position:sticky del navbar en varios navegadores */
   -webkit-font-smoothing: antialiased;
 }
 
@@ -224,6 +224,12 @@ i[data-lucide] { width: 18px; height: 18px; }
   line-height: 1;
 }
 .cart-count[data-empty="true"] { display: none; }
+.cart-count.bump { animation: cartBump .35s ease; }
+@keyframes cartBump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
 
 
 /* ============================================================
