@@ -99,7 +99,7 @@ function buildAppointmentCard(appt, compact) {
       '<span><i data-lucide="clock"></i> ' + appt.appointment_time + '</span>' +
       phoneHtml +
     '</div>' +
-    '<div class="appt-price">$' + Number(appt.price).toFixed(2) + '</div>' +
+    '<div class="appt-price">' + (appt.is_free ? '<span class="free-badge">🎁 Gratis</span>' : '$' + Number(appt.price).toFixed(2)) + '</div>' +
     actionsHtml;
 
   wrap.innerHTML = '<div class="appt-swipe-action"><i data-lucide="trash-2"></i> Eliminar</div>';

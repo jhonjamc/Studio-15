@@ -138,7 +138,7 @@ function buildAppointmentCard(appt, showEmployeeName, compact) {
       '<span><i data-lucide="clock"></i> ' + appt.appointment_time + '</span>' +
       phoneHtml +
     '</div>' +
-    '<div class="appt-price">$' + Number(appt.price).toFixed(2) + '</div>' +
+    '<div class="appt-price">' + (appt.is_free ? '<span class="free-badge">🎁 Gratis</span>' : '$' + Number(appt.price).toFixed(2)) + '</div>' +
     actionsHtml;
 
   wrap.innerHTML = '<div class="appt-swipe-action"><i data-lucide="trash-2"></i> Eliminar</div>';
@@ -408,10 +408,11 @@ async function loadClientsLoyalty() {
 
   list.innerHTML = "";
   data.forEach(function (client) {
-    var pos = (client.completed_cuts || 0) % 6;
+    var LOYALTY_CYCLE = 11;
+    var pos = (client.completed_cuts || 0) % LOYALTY_CYCLE;
     var dotsHtml = "";
-    for (var i = 0; i < 6; i++) {
-      var cls = "loyalty-dot" + (i === 5 ? " free" : "") + (i < pos ? " filled" : "");
+    for (var i = 0; i < LOYALTY_CYCLE; i++) {
+      var cls = "loyalty-dot" + (i === LOYALTY_CYCLE - 1 ? " free" : "") + (i < pos ? " filled" : "");
       dotsHtml += '<div class="' + cls + '"></div>';
     }
 
@@ -419,9 +420,9 @@ async function loadClientsLoyalty() {
     card.className = "dash-card loyalty-card";
     card.innerHTML =
       '<div class="loyalty-top"><span class="loyalty-name">' + (client.full_name || "Cliente") + '</span>' +
-      '<span class="loyalty-count">' + pos + ' / 6</span></div>' +
+      '<span class="loyalty-count">' + pos + ' / ' + LOYALTY_CYCLE + '</span></div>' +
       '<div class="loyalty-track">' + dotsHtml + '</div>' +
-      (pos === 5 ? '<p class="loyalty-message ready">Próximo corte gratis</p>' : '');
+      (pos === LOYALTY_CYCLE - 1 ? '<p class="loyalty-message ready">Próximo corte gratis</p>' : '');
     list.appendChild(card);
   });
 }

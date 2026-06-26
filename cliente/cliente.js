@@ -36,29 +36,31 @@ document.addEventListener("DOMContentLoaded", async function () {
 /* ============================================================
    BARRA DE FIDELIDAD
    ============================================================ */
+var LOYALTY_CYCLE = 11; // el corte número 11 sale gratis
+
 function renderLoyalty(completedCuts) {
-  var positionInCycle = completedCuts % 6; // 0..5
+  var positionInCycle = completedCuts % LOYALTY_CYCLE; // 0..10
   var track = document.getElementById("loyalty-track");
   var countEl = document.getElementById("loyalty-count");
   var msgEl = document.getElementById("loyalty-message");
 
-  countEl.textContent = positionInCycle + " / 6";
+  countEl.textContent = positionInCycle + " / " + LOYALTY_CYCLE;
 
   track.innerHTML = "";
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < LOYALTY_CYCLE; i++) {
     var dot = document.createElement("div");
     dot.className = "loyalty-dot";
-    if (i === 5) dot.classList.add("free");
+    if (i === LOYALTY_CYCLE - 1) dot.classList.add("free");
     if (i < positionInCycle) dot.classList.add("filled");
     track.appendChild(dot);
   }
 
-  if (positionInCycle === 5) {
+  if (positionInCycle === LOYALTY_CYCLE - 1) {
     msgEl.textContent = "¡Tu próximo corte es GRATIS! Menciónalo al agendar o en el local.";
     msgEl.classList.add("ready");
   } else {
-    var faltan = 5 - positionInCycle;
-    msgEl.textContent = "Te faltan " + faltan + " corte" + (faltan === 1 ? "" : "s") + " para tu 6to gratis.";
+    var faltan = (LOYALTY_CYCLE - 1) - positionInCycle;
+    msgEl.textContent = "Te faltan " + faltan + " corte" + (faltan === 1 ? "" : "s") + " para tu corte " + LOYALTY_CYCLE + " gratis.";
     msgEl.classList.remove("ready");
   }
 }
@@ -92,7 +94,7 @@ async function loadAppointments(clientId) {
     var cardHtml =
       '<div class="appt-card-top">' +
         '<div><p class="appt-client-name">' + appt.service_name + '</p>' +
-        '<p class="appt-service">$' + Number(appt.price).toFixed(2) + '</p></div>' +
+        '<p class="appt-service">' + (appt.is_free ? '<span class="free-badge">🎁 Gratis</span>' : '$' + Number(appt.price).toFixed(2)) + '</p></div>' +
         '<span class="status-badge ' + appt.status + '">' + STATUS_LABELS[appt.status] + '</span>' +
       '</div>' +
       '<div class="appt-meta">' +
