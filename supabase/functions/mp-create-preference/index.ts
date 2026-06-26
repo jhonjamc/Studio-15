@@ -10,12 +10,28 @@
 //   supabase secrets set MP_ACCESS_TOKEN=TEST-xxxxxxxx (o APP_USR-xxxx en producción)
 // ============================================================================
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 Deno.serve(async (req) => {
+  // El navegador manda primero una petición OPTIONS (CORS preflight)
+  // antes de la real. Si no respondemos esto, la petición de verdad
+  // se queda "pending" para siempre y nunca llega a la función.
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
     const { items, externalReference, redirectUrl } = await req.json();
 
     if (!items || !items.length || !externalReference) {
-      return new Response(JSON.stringify({ error: "Faltan datos (items, externalReference)" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Faltan datos (items, externalReference)" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const accessToken = Deno.env.get("MP_ACCESS_TOKEN") ?? "";
@@ -52,7 +68,10 @@ Deno.serve(async (req) => {
 
     if (!mpRes.ok) {
       console.error("Error creando preferencia en Mercado Pago:", mpData);
-      return new Response(JSON.stringify({ error: mpData }), { status: 500 });
+      return new Response(JSON.stringify({ error: mpData }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(
@@ -60,10 +79,13 @@ Deno.serve(async (req) => {
         init_point: mpData.init_point,
         sandbox_init_point: mpData.sandbox_init_point,
       }),
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     console.error("Error en mp-create-preference:", err);
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
