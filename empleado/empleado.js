@@ -64,9 +64,12 @@ async function loadAppointments() {
 }
 
 function buildAppointmentCard(appt, compact) {
+  var wrap = document.createElement("div");
+  wrap.className = "appt-swipe-wrap";
+  wrap.dataset.apptId = appt.id;
+
   var card = document.createElement("article");
   card.className = "dash-card appt-card" + (compact ? " compact" : "");
-  card.dataset.apptId = appt.id;
 
   var actionsHtml = "";
   if (!compact && appt.status === "pending") {
@@ -99,35 +102,53 @@ function buildAppointmentCard(appt, compact) {
     '<div class="appt-price">$' + Number(appt.price).toFixed(2) + '</div>' +
     actionsHtml;
 
-  return card;
+  wrap.innerHTML = '<div class="appt-swipe-action"><i data-lucide="trash-2"></i> Eliminar</div>';
+  wrap.appendChild(card);
+
+  return wrap;
 }
 
 /* ============================================================
-   MENÚ CONTEXTUAL: eliminar cita (clic derecho / mantener presionado)
+   ELIMINAR CITA: clic derecho (PC) + swipe izquierda (celular)
    ============================================================ */
+async function deleteAppointment(id) {
+  var { error } = await supabaseClient.from("appointments").delete().eq("id", id);
+  if (error) {
+    alert("No se pudo eliminar la cita.");
+    console.error(error);
+    return;
+  }
+  await loadAppointments();
+  await loadEarnings();
+}
+
 var contextMenuReady = false;
 function setupAppointmentContextMenu() {
   if (contextMenuReady) return; // el contenedor no se reemplaza, solo su contenido
   if (typeof attachContextMenu !== "function") return;
   contextMenuReady = true;
 
-  attachContextMenu(document.getElementById("appointments-wrap"), "[data-appt-id]", [
+  var wrapEl = document.getElementById("appointments-wrap");
+
+  attachContextMenu(wrapEl, "[data-appt-id]", [
     {
       label: "Eliminar cita",
       icon: "trash-2",
-      onClick: async function (targetEl) {
-        if (!confirm("¿Eliminar esta cita? Esta acción no se puede deshacer.")) return;
-        var { error } = await supabaseClient.from("appointments").delete().eq("id", targetEl.dataset.apptId);
-        if (error) {
-          alert("No se pudo eliminar la cita.");
-          console.error(error);
-          return;
-        }
-        await loadAppointments();
-        await loadEarnings();
+      onClick: function (targetEl) {
+        showConfirmDialog("¿Eliminar esta cita? Esta acción no se puede deshacer.", function () {
+          deleteAppointment(targetEl.dataset.apptId);
+        });
       },
     },
   ]);
+
+  if (typeof attachSwipeToDelete === "function") {
+    attachSwipeToDelete(wrapEl, ".appt-swipe-wrap", function (swipeWrapEl, closeFn) {
+      showConfirmDialog("¿Eliminar esta cita? Esta acción no se puede deshacer.", function () {
+        deleteAppointment(swipeWrapEl.dataset.apptId);
+      });
+    });
+  }
 }
 
 document.addEventListener("click", async function (e) {

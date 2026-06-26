@@ -235,3 +235,49 @@
 }
 .ctx-menu-item:hover { background: var(--color-bg-alt); }
 .ctx-menu-item i { width: 16px; height: 16px; }
+
+
+/* ============================================================
+   CUADRO DE CONFIRMACIÓN PROPIO
+   ============================================================ */
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: ctxFadeIn .15s ease;
+}
+.confirm-box {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: 24px;
+  max-width: 340px; width: 100%; box-shadow: var(--shadow-pop);
+}
+.confirm-message { margin: 0 0 20px; font-size: .92rem; color: var(--color-text); line-height: 1.5; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-btn {
+  flex: 1; padding: 10px; border-radius: var(--radius-pill);
+  font-size: .82rem; font-weight: 700; text-transform: uppercase;
+  transition: transform .15s, opacity .15s;
+}
+.confirm-btn:hover { transform: translateY(-1px); }
+.confirm-cancel { border: 1.5px solid var(--color-border); color: var(--color-text); }
+.confirm-delete { background: var(--gradient-red); color: #fff; }
+
+
+/* ============================================================
+   SWIPE TO DELETE (celular, estilo iPhone)
+   ============================================================ */
+.appt-swipe-wrap { position: relative; overflow: hidden; border-radius: var(--radius-md); }
+.appt-swipe-wrap .appt-card { position: relative; z-index: 1; background: var(--color-surface); }
+.appt-swipe-action {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 84px; z-index: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: var(--gradient-red); color: #fff;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  cursor: pointer;
+}
+.appt-swipe-action i { width: 18px; height: 18px; }
+/* En PC no hace falta el swipe; se usa clic derecho. Ocultamos el aviso visual de sobra. */
+@media (hover: hover) and (pointer: fine) {
+  .appt-swipe-action { opacity: 0; pointer-events: none; }
+}
