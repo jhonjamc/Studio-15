@@ -25,7 +25,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { items, externalReference, redirectUrl } = await req.json();
+    var payload;
+    try {
+      payload = await req.json();
+    } catch (parseErr) {
+      return new Response(JSON.stringify({ error: "Body vacío o no es JSON válido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { items, externalReference, redirectUrl } = payload;
 
     if (!items || !items.length || !externalReference) {
       return new Response(JSON.stringify({ error: "Faltan datos (items, externalReference)" }), {
