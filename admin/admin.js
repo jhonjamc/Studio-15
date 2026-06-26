@@ -56,11 +56,13 @@ async function loadAppointments() {
     .select("*")
     .order("appointment_date", { ascending: true });
 
-  var ownList = document.getElementById("own-appointments-list");
-  var teamList = document.getElementById("team-appointments-list");
+  var ownPending = document.getElementById("own-appointments-pending");
+  var ownCompleted = document.getElementById("own-appointments-completed");
+  var teamPending = document.getElementById("team-appointments-pending");
+  var teamCompleted = document.getElementById("team-appointments-completed");
 
   if (error) {
-    ownList.innerHTML = teamList.innerHTML = '<p class="dashboard-empty">No se pudieron cargar las citas.</p>';
+    ownPending.innerHTML = teamPending.innerHTML = '<p class="dashboard-empty">No se pudieron cargar las citas.</p>';
     console.error(error);
     return;
   }
@@ -68,21 +70,36 @@ async function loadAppointments() {
   var own = data.filter(function (a) { return a.employee_id === currentAdminId; });
   var team = data.filter(function (a) { return a.employee_id !== currentAdminId; });
 
+  // "Pendientes" = todavía no termina (pending/accepted). El resto
+  // (completed/rejected/cancelled) ya está cerrado, va a "Completadas".
+  function isPending(a) { return a.status === "pending" || a.status === "accepted"; }
+
+  var ownP = own.filter(isPending), ownC = own.filter(function (a) { return !isPending(a); });
+  var teamP = team.filter(isPending), teamC = team.filter(function (a) { return !isPending(a); });
+
   document.getElementById("kpi-pending-count").textContent =
     data.filter(function (a) { return a.status === "pending"; }).length;
 
-  ownList.innerHTML = own.length ? "" : '<p class="dashboard-empty">No tienes citas propias.</p>';
-  own.forEach(function (a) { ownList.appendChild(buildAppointmentCard(a, false)); });
+  ownPending.innerHTML = ownP.length ? "" : '<p class="dashboard-empty">No tienes citas pendientes.</p>';
+  ownP.forEach(function (a) { ownPending.appendChild(buildAppointmentCard(a, false, false)); });
 
-  teamList.innerHTML = team.length ? "" : '<p class="dashboard-empty">El equipo no tiene citas todavía.</p>';
-  team.forEach(function (a) { teamList.appendChild(buildAppointmentCard(a, true)); });
+  ownCompleted.innerHTML = ownC.length ? "" : '<p class="dashboard-empty">Sin historial todavía.</p>';
+  ownC.forEach(function (a) { ownCompleted.appendChild(buildAppointmentCard(a, false, true)); });
+
+  teamPending.innerHTML = teamP.length ? "" : '<p class="dashboard-empty">El equipo no tiene citas pendientes.</p>';
+  teamP.forEach(function (a) { teamPending.appendChild(buildAppointmentCard(a, true, false)); });
+
+  teamCompleted.innerHTML = teamC.length ? "" : '<p class="dashboard-empty">Sin historial todavía.</p>';
+  teamC.forEach(function (a) { teamCompleted.appendChild(buildAppointmentCard(a, true, true)); });
 
   if (window.lucide) lucide.createIcons();
+  setupAppointmentContextMenus();
 }
 
-function buildAppointmentCard(appt, showEmployeeName) {
+function buildAppointmentCard(appt, showEmployeeName, compact) {
   var card = document.createElement("article");
-  card.className = "dash-card appt-card";
+  card.className = "dash-card appt-card" + (compact ? " compact" : "");
+  card.dataset.apptId = appt.id;
 
   var employeeLabel = "";
   if (showEmployeeName) {
@@ -91,18 +108,21 @@ function buildAppointmentCard(appt, showEmployeeName) {
   }
 
   var actionsHtml = "";
-  if (appt.status === "pending") {
+  if (!compact && appt.status === "pending") {
     actionsHtml =
       '<div class="appt-actions">' +
         '<button class="appt-btn appt-btn-accept" data-action="accept" data-id="' + appt.id + '"><i data-lucide="check"></i> Aceptar</button>' +
         '<button class="appt-btn appt-btn-reject" data-action="reject" data-id="' + appt.id + '"><i data-lucide="x"></i> Rechazar</button>' +
       '</div>';
-  } else if (appt.status === "accepted") {
+  } else if (!compact && appt.status === "accepted") {
     actionsHtml =
       '<div class="appt-actions">' +
         '<button class="appt-btn appt-btn-complete" data-action="complete" data-id="' + appt.id + '"><i data-lucide="check-check"></i> Marcar completada</button>' +
       '</div>';
   }
+
+  // En modo compacto (completadas) se quita el teléfono del cliente.
+  var phoneHtml = compact ? "" : '<span><i data-lucide="phone"></i> ' + appt.client_phone + '</span>';
 
   card.innerHTML =
     '<div class="appt-card-top">' +
@@ -113,12 +133,46 @@ function buildAppointmentCard(appt, showEmployeeName) {
     '<div class="appt-meta">' +
       '<span><i data-lucide="calendar"></i> ' + appt.appointment_date + '</span>' +
       '<span><i data-lucide="clock"></i> ' + appt.appointment_time + '</span>' +
-      '<span><i data-lucide="phone"></i> ' + appt.client_phone + '</span>' +
+      phoneHtml +
     '</div>' +
     '<div class="appt-price">$' + Number(appt.price).toFixed(2) + '</div>' +
     actionsHtml;
 
   return card;
+}
+
+/* ============================================================
+   MENÚ CONTEXTUAL: eliminar cita (clic derecho / mantener presionado)
+   ============================================================ */
+var contextMenusReady = false;
+function setupAppointmentContextMenus() {
+  if (contextMenusReady) return; // los contenedores no se reemplazan, solo su contenido
+  if (typeof attachContextMenu !== "function") return;
+  contextMenusReady = true;
+
+  [
+    document.getElementById("own-appointments-wrap"),
+    document.getElementById("team-appointments-wrap"),
+  ].forEach(function (wrap) {
+    attachContextMenu(wrap, "[data-appt-id]", [
+      {
+        label: "Eliminar cita",
+        icon: "trash-2",
+        onClick: async function (targetEl) {
+          if (!confirm("¿Eliminar esta cita? Esta acción no se puede deshacer.")) return;
+          var { error } = await supabaseClient.from("appointments").delete().eq("id", targetEl.dataset.apptId);
+          if (error) {
+            alert("No se pudo eliminar la cita.");
+            console.error(error);
+            return;
+          }
+          await loadAppointments();
+          await loadEarnings();
+          await loadClientsLoyalty();
+        },
+      },
+    ]);
+  });
 }
 
 document.addEventListener("click", async function (e) {

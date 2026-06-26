@@ -34,7 +34,8 @@ document.addEventListener("DOMContentLoaded", async function () {
    CITAS
    ============================================================ */
 async function loadAppointments() {
-  var list = document.getElementById("appointments-list");
+  var pendingList = document.getElementById("appointments-pending");
+  var completedList = document.getElementById("appointments-completed");
 
   var { data, error } = await supabaseClient
     .from("appointments")
@@ -43,38 +44,46 @@ async function loadAppointments() {
     .order("appointment_date", { ascending: true });
 
   if (error) {
-    list.innerHTML = '<p class="dashboard-empty">No se pudieron cargar las citas.</p>';
+    pendingList.innerHTML = '<p class="dashboard-empty">No se pudieron cargar las citas.</p>';
     console.error(error);
     return;
   }
 
-  if (!data.length) {
-    list.innerHTML = '<p class="dashboard-empty">No tienes citas todavía.</p>';
-    return;
-  }
+  function isPending(a) { return a.status === "pending" || a.status === "accepted"; }
+  var pending = data.filter(isPending);
+  var completed = data.filter(function (a) { return !isPending(a); });
 
-  list.innerHTML = "";
-  data.forEach(function (appt) { list.appendChild(buildAppointmentCard(appt)); });
+  pendingList.innerHTML = pending.length ? "" : '<p class="dashboard-empty">No tienes citas pendientes.</p>';
+  pending.forEach(function (appt) { pendingList.appendChild(buildAppointmentCard(appt, false)); });
+
+  completedList.innerHTML = completed.length ? "" : '<p class="dashboard-empty">Sin historial todavía.</p>';
+  completed.forEach(function (appt) { completedList.appendChild(buildAppointmentCard(appt, true)); });
+
   if (window.lucide) lucide.createIcons();
+  setupAppointmentContextMenu();
 }
 
-function buildAppointmentCard(appt) {
+function buildAppointmentCard(appt, compact) {
   var card = document.createElement("article");
-  card.className = "dash-card appt-card";
+  card.className = "dash-card appt-card" + (compact ? " compact" : "");
+  card.dataset.apptId = appt.id;
 
   var actionsHtml = "";
-  if (appt.status === "pending") {
+  if (!compact && appt.status === "pending") {
     actionsHtml =
       '<div class="appt-actions">' +
         '<button class="appt-btn appt-btn-accept" data-action="accept" data-id="' + appt.id + '"><i data-lucide="check"></i> Aceptar</button>' +
         '<button class="appt-btn appt-btn-reject" data-action="reject" data-id="' + appt.id + '"><i data-lucide="x"></i> Rechazar</button>' +
       '</div>';
-  } else if (appt.status === "accepted") {
+  } else if (!compact && appt.status === "accepted") {
     actionsHtml =
       '<div class="appt-actions">' +
         '<button class="appt-btn appt-btn-complete" data-action="complete" data-id="' + appt.id + '"><i data-lucide="check-check"></i> Marcar completada</button>' +
       '</div>';
   }
+
+  // En modo compacto (completadas) se quita el teléfono del cliente.
+  var phoneHtml = compact ? "" : '<span><i data-lucide="phone"></i> ' + appt.client_phone + '</span>';
 
   card.innerHTML =
     '<div class="appt-card-top">' +
@@ -85,12 +94,40 @@ function buildAppointmentCard(appt) {
     '<div class="appt-meta">' +
       '<span><i data-lucide="calendar"></i> ' + appt.appointment_date + '</span>' +
       '<span><i data-lucide="clock"></i> ' + appt.appointment_time + '</span>' +
-      '<span><i data-lucide="phone"></i> ' + appt.client_phone + '</span>' +
+      phoneHtml +
     '</div>' +
     '<div class="appt-price">$' + Number(appt.price).toFixed(2) + '</div>' +
     actionsHtml;
 
   return card;
+}
+
+/* ============================================================
+   MENÚ CONTEXTUAL: eliminar cita (clic derecho / mantener presionado)
+   ============================================================ */
+var contextMenuReady = false;
+function setupAppointmentContextMenu() {
+  if (contextMenuReady) return; // el contenedor no se reemplaza, solo su contenido
+  if (typeof attachContextMenu !== "function") return;
+  contextMenuReady = true;
+
+  attachContextMenu(document.getElementById("appointments-wrap"), "[data-appt-id]", [
+    {
+      label: "Eliminar cita",
+      icon: "trash-2",
+      onClick: async function (targetEl) {
+        if (!confirm("¿Eliminar esta cita? Esta acción no se puede deshacer.")) return;
+        var { error } = await supabaseClient.from("appointments").delete().eq("id", targetEl.dataset.apptId);
+        if (error) {
+          alert("No se pudo eliminar la cita.");
+          console.error(error);
+          return;
+        }
+        await loadAppointments();
+        await loadEarnings();
+      },
+    },
+  ]);
 }
 
 document.addEventListener("click", async function (e) {
@@ -107,6 +144,7 @@ document.addEventListener("click", async function (e) {
     .from("appointments")
     .update({ status: newStatus })
     .eq("id", id);
+
 
   if (error) {
     alert("No se pudo actualizar la cita.");

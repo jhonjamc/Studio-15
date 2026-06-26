@@ -70,8 +70,13 @@
     <!-- ===================== CITAS QUE TE PIDIERON ===================== -->
     <div class="dashboard-block">
       <h2 class="dashboard-block-title"><i data-lucide="calendar"></i> Citas que te pidieron</h2>
-      <div class="cards-grid cols-3" id="appointments-list">
-        <p class="dashboard-empty">Cargando citas...</p>
+      <div id="appointments-wrap">
+        <h3 class="dashboard-subblock-title">Pendientes</h3>
+        <div class="cards-grid cols-3" id="appointments-pending">
+          <p class="dashboard-empty">Cargando citas...</p>
+        </div>
+        <h3 class="dashboard-subblock-title">Completadas</h3>
+        <div class="cards-grid cols-4" id="appointments-completed"></div>
       </div>
     </div>
 
@@ -87,6 +92,7 @@
 <script src="../global/payment-info.js"></script>
 <script src="../global/auth.js"></script>
 <script src="../global/global.js"></script>
+<script src="../global/context-menu.js"></script>
 <script src="empleado.js"></script>
 
 </body>

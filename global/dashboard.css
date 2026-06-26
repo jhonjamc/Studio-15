@@ -49,6 +49,12 @@
   padding: 24px; text-align: center;
 }
 
+.dashboard-subblock-title {
+  font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--color-text-muted); margin: 22px 0 12px;
+}
+.dashboard-subblock-title:first-child { margin-top: 0; }
+
 .dashboard-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
 .dashboard-tab {
   border: 1px solid var(--color-border); background: var(--color-surface);
@@ -91,6 +97,13 @@
 .appt-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .appt-client-name { font-size: 1.1rem; font-weight: 700; }
 .appt-service { font-size: .85rem; color: var(--color-text-muted); margin-top: 2px; }
+
+/* Cards de citas completadas: más chicas, sin acciones, sin celular */
+.appt-card.compact { padding: 14px 16px; gap: 8px; }
+.appt-card.compact .appt-client-name { font-size: .92rem; }
+.appt-card.compact .appt-service { font-size: .76rem; }
+.appt-card.compact .appt-meta { font-size: .74rem; gap: 10px; }
+.appt-card.compact .appt-price { font-size: 1.05rem; }
 
 .appt-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--color-text-muted); }
 .appt-meta span { display: inline-flex; align-items: center; gap: 6px; }
@@ -199,3 +212,26 @@
 .dash-form-msg { font-size: .82rem; font-weight: 600; min-height: 1.2em; }
 .dash-form-msg.ok { color: #2ecc71; }
 .dash-form-msg.error { color: var(--color-red); }
+
+
+/* ============================================================
+   MENÚ CONTEXTUAL (clic derecho / mantener presionado)
+   Usado para "Eliminar cita" en admin.html y empleado.html.
+   ============================================================ */
+.ctx-menu {
+  position: fixed; z-index: 200;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-card);
+  padding: 6px; min-width: 160px;
+  animation: ctxFadeIn .12s ease;
+}
+@keyframes ctxFadeIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+
+.ctx-menu-item {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  font-size: .85rem; font-weight: 600; color: var(--color-red);
+  text-align: left; transition: background .15s;
+}
+.ctx-menu-item:hover { background: var(--color-bg-alt); }
+.ctx-menu-item i { width: 16px; height: 16px; }

@@ -287,6 +287,11 @@ drop policy if exists "appointments_update" on public.appointments;
 create policy "appointments_update" on public.appointments
   for update using (employee_id = auth.uid() or public.is_admin());
 
+-- El admin puede eliminar cualquier cita; un empleado solo las suyas.
+drop policy if exists "appointments_delete" on public.appointments;
+create policy "appointments_delete" on public.appointments
+  for delete using (employee_id = auth.uid() or public.is_admin());
+
 -- ---------- purchases ----------
 drop policy if exists "purchases_select_own_or_admin" on public.purchases;
 create policy "purchases_select_own_or_admin" on public.purchases

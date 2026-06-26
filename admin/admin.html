@@ -89,16 +89,26 @@
     <!-- ===================== TUS CITAS (el admin como barbero) ===================== -->
     <div class="dashboard-block">
       <h2 class="dashboard-block-title"><i data-lucide="calendar"></i> Tus citas (como barbero)</h2>
-      <div class="cards-grid cols-3" id="own-appointments-list">
-        <p class="dashboard-empty">Cargando...</p>
+      <div id="own-appointments-wrap">
+        <h3 class="dashboard-subblock-title">Pendientes</h3>
+        <div class="cards-grid cols-3" id="own-appointments-pending">
+          <p class="dashboard-empty">Cargando...</p>
+        </div>
+        <h3 class="dashboard-subblock-title">Completadas</h3>
+        <div class="cards-grid cols-4" id="own-appointments-completed"></div>
       </div>
     </div>
 
     <!-- ===================== CITAS DE LOS EMPLEADOS ===================== -->
     <div class="dashboard-block">
       <h2 class="dashboard-block-title"><i data-lucide="users"></i> Citas de los empleados</h2>
-      <div class="cards-grid cols-3" id="team-appointments-list">
-        <p class="dashboard-empty">Cargando...</p>
+      <div id="team-appointments-wrap">
+        <h3 class="dashboard-subblock-title">Pendientes</h3>
+        <div class="cards-grid cols-3" id="team-appointments-pending">
+          <p class="dashboard-empty">Cargando...</p>
+        </div>
+        <h3 class="dashboard-subblock-title">Completadas</h3>
+        <div class="cards-grid cols-4" id="team-appointments-completed"></div>
       </div>
     </div>
 
@@ -156,6 +166,7 @@
 <script src="../global/payment-info.js"></script>
 <script src="../global/auth.js"></script>
 <script src="../global/global.js"></script>
+<script src="../global/context-menu.js"></script>
 <script src="admin.js"></script>
 
 </body>
