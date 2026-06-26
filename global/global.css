@@ -194,6 +194,12 @@ i[data-lucide] { width: 18px; height: 18px; }
 
 .header-actions { display: flex; align-items: center; gap: 14px; }
 
+.dashboard-panel-label {
+  font-family: var(--font-display); font-size: 1.1rem; letter-spacing: .04em;
+  color: var(--color-text-muted); text-transform: uppercase;
+}
+@media (max-width: 480px) { .dashboard-panel-label { display: none; } }
+
 .btn-reservar {
   display: inline-flex; align-items: center; gap: 8px;
   border-radius: var(--radius-pill); background: var(--color-red); color: #fff;
@@ -469,3 +475,13 @@ i[data-lucide] { width: 18px; height: 18px; }
 }
 .footer-social a:hover { border-color: var(--color-red); color: var(--color-red); transform: translateY(-2px); }
 .footer-social i { width: 16px; height: 16px; }
+
+/* ============================================================
+   FOOTER SIMPLE DE LOS PANELES (admin / empleado / cliente)
+   ============================================================ */
+.dashboard-footer { padding: 18px 20px; }
+.dashboard-footer-inner {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  flex-direction: row;
+}
+.dashboard-footer-inner p { margin: 0; font-size: .8rem; color: var(--color-text-muted); }

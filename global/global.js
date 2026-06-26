@@ -122,6 +122,45 @@ var CART_TEMPLATE = `
 
 
 /* ============================================================
+   1.1 NAVBAR / FOOTER DE LOS PANELES (admin / empleado / cliente)
+   Más simples que los del sitio público: logo + nombre del panel +
+   carrito + un solo botón de cerrar sesión (icono, sin texto).
+   El texto del panel se toma del atributo data-panel-label del
+   contenedor #site-dashboard-header en cada página.
+   ============================================================ */
+var DASHBOARD_HEADER_TEMPLATE = `
+<header class="header" id="top-header">
+  <div class="header-inner">
+    <a href="../index/index.html" class="logo">
+      <span class="logo-icon"><i data-lucide="scissors"></i></span>
+      <span class="logo-text">BARBERÍA <span class="accent">ESTUDIO 15</span></span>
+    </a>
+    <span class="dashboard-panel-label" id="dashboard-panel-label">Panel</span>
+    <div class="header-actions">
+      <button type="button" class="cart-trigger" id="cartTrigger" aria-label="Abrir carrito">
+        <i data-lucide="shopping-bag"></i>
+        <span class="cart-count" id="cartCount" data-empty="true">0</span>
+      </button>
+      <button type="button" class="cart-trigger" data-logout aria-label="Cerrar sesión">
+        <i data-lucide="log-out"></i>
+      </button>
+    </div>
+  </div>
+  <div class="pole-strip"></div>
+</header>
+`;
+
+var DASHBOARD_FOOTER_TEMPLATE = `
+<footer class="footer dashboard-footer">
+  <div class="footer-inner dashboard-footer-inner">
+    <span class="logo-icon small"><i data-lucide="scissors"></i></span>
+    <p>© 2026 Estudio 15 — Panel interno</p>
+  </div>
+</footer>
+`;
+
+
+/* ============================================================
    2. INYECCIÓN DE LAS PLANTILLAS
    Si una página no tiene el contenedor (ej. no quieres carrito
    en alguna página), simplemente no se inyecta nada ahí.
@@ -132,6 +171,17 @@ function injectPartials() {
 
   var footerSlot = document.getElementById("site-footer");
   if (footerSlot) footerSlot.innerHTML = FOOTER_TEMPLATE;
+
+  var dashHeaderSlot = document.getElementById("site-dashboard-header");
+  if (dashHeaderSlot) {
+    var panelLabel = dashHeaderSlot.dataset.panelLabel || "Panel";
+    dashHeaderSlot.innerHTML = DASHBOARD_HEADER_TEMPLATE;
+    var labelEl = document.getElementById("dashboard-panel-label");
+    if (labelEl) labelEl.textContent = panelLabel;
+  }
+
+  var dashFooterSlot = document.getElementById("site-dashboard-footer");
+  if (dashFooterSlot) dashFooterSlot.innerHTML = DASHBOARD_FOOTER_TEMPLATE;
 
   var cartSlot = document.getElementById("site-cart");
   if (cartSlot) cartSlot.innerHTML = CART_TEMPLATE;
