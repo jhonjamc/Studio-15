@@ -105,6 +105,18 @@ var CART_TEMPLATE = `
     <button type="button" class="btn-shine cart-checkout-btn">Finalizar compra</button>
     <p class="cart-checkout-msg" id="cartCheckoutMsg"></p>
   </div>
+
+  <div class="cart-payment-instructions" id="cartPaymentInstructions" style="display:none;">
+    <p class="cpi-title">¡Pedido registrado! Total: <span id="cpiTotal">$0.00</span></p>
+    <p class="cpi-text">Transfiere a:</p>
+    <div class="cpi-method"><strong>Nequi:</strong> <span id="cpiNequi"></span></div>
+    <div class="cpi-method"><strong>Bancolombia:</strong> <span id="cpiBancolombia"></span></div>
+    <p class="cpi-text">Y envíanos el comprobante para confirmar tu compra:</p>
+    <a class="btn-shine cart-checkout-btn" id="cpiWhatsappBtn" target="_blank" rel="noopener">
+      Enviar comprobante por WhatsApp
+    </a>
+    <button type="button" class="cpi-close-btn" id="cpiCloseBtn">Listo, ya transferí</button>
+  </div>
 </aside>
 `;
 
@@ -210,6 +222,7 @@ function initCart() {
     overlay.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
     document.body.classList.add("no-scroll");
+    resetCartView();
     var msgEl = document.getElementById("cartCheckoutMsg");
     if (msgEl) { msgEl.textContent = ""; msgEl.className = "cart-checkout-msg"; }
   }
@@ -305,16 +318,39 @@ function initCart() {
   }
 
   /* --------------------------------------------------------
-     Finalizar compra: requiere login, crea una preferencia de
-     pago en Mercado Pago, y manda al cliente a pagar ahí. Solo
-     cuando Mercado Pago confirma el pago (vía webhook en el
-     servidor) la compra queda como "approved".
+     Finalizar compra: requiere login, registra el pedido como
+     "pending" y le muestra al cliente los datos para transferir
+     (Nequi/Bancolombia). El admin lo confirma a mano desde su
+     panel cuando vea que llegó la plata.
      -------------------------------------------------------- */
   function showCheckoutMsg(msg, type) {
     var msgEl = document.getElementById("cartCheckoutMsg");
     if (!msgEl) return;
     msgEl.textContent = msg;
     msgEl.className = "cart-checkout-msg" + (type ? " " + type : "");
+  }
+
+  function showPaymentInstructions(total, orderRef) {
+    document.getElementById("cartItems").style.display = "none";
+    document.querySelector(".cart-drawer-footer").style.display = "none";
+
+    document.getElementById("cpiTotal").textContent = "$" + total.toFixed(2);
+    document.getElementById("cpiNequi").textContent = PAYMENT_INFO.nequiNumber + " (" + PAYMENT_INFO.nequiName + ")";
+    document.getElementById("cpiBancolombia").textContent =
+      PAYMENT_INFO.bancolombiaAccountType + " " + PAYMENT_INFO.bancolombiaAccountNumber + " (" + PAYMENT_INFO.bancolombiaName + ")";
+
+    var message = "Hola! Acabo de hacer un pedido en Estudio 15 por $" + total.toFixed(2) +
+      " (referencia " + orderRef + "). Aquí va mi comprobante de pago.";
+    document.getElementById("cpiWhatsappBtn").href =
+      "https://wa.me/" + PAYMENT_INFO.whatsappNumber + "?text=" + encodeURIComponent(message);
+
+    document.getElementById("cartPaymentInstructions").style.display = "block";
+  }
+
+  function resetCartView() {
+    document.getElementById("cartItems").style.display = "";
+    document.querySelector(".cart-drawer-footer").style.display = "";
+    document.getElementById("cartPaymentInstructions").style.display = "none";
   }
 
   async function handleCheckout() {
@@ -336,81 +372,35 @@ function initCart() {
       return;
     }
 
-    showCheckoutMsg("Preparando tu pago...", "");
+    showCheckoutMsg("Registrando tu pedido...", "");
 
     var total = cart.reduce(function (sum, item) { return sum + item.price * item.qty; }, 0);
     var items = cart.map(function (i) { return { name: i.name, price: i.price, qty: i.qty }; });
-    var reference = "estudio15-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
 
-    // 1) Guardamos la compra como "pending" ANTES de pagar. Si el pago
-    //    nunca se confirma, se queda en pending para siempre (no se cuenta
-    //    en las ganancias del admin, que solo suman "approved").
-    var { error: insertError } = await supabaseClient.from("purchases").insert({
-      client_id: profile.id,
-      items: items,
-      total: total,
-      status: "pending",
-      payment_reference: reference,
-    });
+    var { data, error } = await supabaseClient
+      .from("purchases")
+      .insert({ client_id: profile.id, items: items, total: total, status: "pending" })
+      .select()
+      .single();
 
-    if (insertError) {
-      showCheckoutMsg("No se pudo iniciar tu compra. Intenta de nuevo.", "error");
-      console.error(insertError);
-      return;
-    }
-
-    // 2) Pedimos a nuestra Edge Function que cree la preferencia de pago
-    //    en Mercado Pago (el access token nunca toca el navegador).
-    var { data, error } = await supabaseClient.functions.invoke("mp-create-preference", {
-      body: { items: items, externalReference: reference, redirectUrl: window.location.href },
-    });
-
-    if (error || !data || !(data.init_point || data.sandbox_init_point)) {
-      showCheckoutMsg("No se pudo iniciar el pago. Intenta de nuevo.", "error");
+    if (error) {
+      showCheckoutMsg("No se pudo registrar tu pedido. Intenta de nuevo.", "error");
       console.error(error);
       return;
     }
 
-    // 3) Mandamos al cliente a pagar en la página de Mercado Pago.
-    //    Cuando termine, vuelve a esta misma página (redirectUrl).
-    window.location.href = data.init_point || data.sandbox_init_point;
+    showCheckoutMsg("", "");
+    var orderRef = String(data.id).slice(0, 8).toUpperCase();
+    showPaymentInstructions(total, orderRef);
+    saveCart([]);
+    renderCart();
   }
 
-  /* --------------------------------------------------------
-     Cuando Mercado Pago redirige de vuelta después de pagar,
-     llega con parámetros en la URL (status, external_reference,
-     etc). Los leemos para avisarle algo al instante, aunque el
-     estado real y definitivo lo confirma el webhook en el servidor.
-     -------------------------------------------------------- */
-  function checkPaymentReturn() {
-    var params = new URLSearchParams(window.location.search);
-    var status = params.get("status") || params.get("collection_status");
-    if (!status) return;
-
-    openCart();
-    if (status === "approved") {
-      showCheckoutMsg("¡Pago aprobado! Ya lo puedes ver en tu historial.", "ok");
-      saveCart([]);
-      renderCart();
-    } else if (status === "pending" || status === "in_process") {
-      showCheckoutMsg("Tu pago está siendo procesado. Te avisaremos.", "ok");
-      saveCart([]);
-      renderCart();
-    } else {
-      showCheckoutMsg("El pago no se completó. Tu carrito sigue intacto.", "error");
-    }
-
-    [
-      "collection_id", "collection_status", "payment_id", "status", "external_reference",
-      "payment_type", "merchant_order_id", "preference_id", "site_id",
-      "processing_mode", "merchant_account_id",
-    ].forEach(function (key) { params.delete(key); });
-
-    var cleanUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "") + window.location.hash;
-    window.history.replaceState({}, "", cleanUrl);
-
-    setTimeout(function () { showCheckoutMsg("", ""); }, 4000);
-  }
+  var cpiCloseBtn = document.getElementById("cpiCloseBtn");
+  cpiCloseBtn && cpiCloseBtn.addEventListener("click", function () {
+    resetCartView();
+    closeCart();
+  });
 
   /* --------------------------------------------------------
      8. LISTENERS GLOBALES (delegación de eventos)
@@ -447,5 +437,4 @@ function initCart() {
   });
 
   renderCart();
-  checkPaymentReturn();
 }

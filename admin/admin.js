@@ -15,6 +15,7 @@ var ADM_STATUS_LABELS = {
 
 var currentAdminId = null;
 var profilesById = {}; // cache id -> profile, para mostrar nombres
+var lastCitasAdminTotal = 0; // se actualiza en loadEarnings, se reusa al refrescar ventas
 
 document.addEventListener("DOMContentLoaded", async function () {
 
@@ -28,6 +29,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadAppointments();
   var citasAdminTotal = await loadEarnings();
   await loadProductSales(citasAdminTotal);
+  await loadPendingPurchases();
   await loadClientsLoyalty();
   setupLinkEmployeeForm();
 
@@ -189,6 +191,7 @@ async function loadEarnings() {
   var ids = Object.keys(byEmployee);
   if (!ids.length) {
     card.innerHTML = '<p class="dashboard-empty">Todavía no hay citas completadas.</p>';
+    lastCitasAdminTotal = totalAdmin;
     return totalAdmin;
   }
 
@@ -212,8 +215,79 @@ async function loadEarnings() {
     card.appendChild(row);
   });
 
-  return totalAdmin;
+  lastCitasAdminTotal = totalAdmin;
+    return totalAdmin;
 }
+
+
+/* ============================================================
+   COMPRAS PENDIENTES DE PAGO (Nequi/Bancolombia manual)
+   El admin revisa que sí llegó la plata y la marca a mano.
+   ============================================================ */
+async function loadPendingPurchases() {
+  var list = document.getElementById("pending-purchases-list");
+
+  var { data, error } = await supabaseClient
+    .from("purchases")
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    list.innerHTML = '<p class="dashboard-empty">No se pudieron cargar las compras pendientes.</p>';
+    console.error(error);
+    return;
+  }
+
+  if (!data.length) {
+    list.innerHTML = '<p class="dashboard-empty">No hay compras pendientes de confirmar.</p>';
+    return;
+  }
+
+  list.innerHTML = "";
+  data.forEach(function (purchase) {
+    var clientProfile = profilesById[purchase.client_id];
+    var clientName = clientProfile ? clientProfile.full_name : "Cliente";
+    var date = new Date(purchase.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    var itemsHtml = purchase.items.map(function (item) {
+      return '<div class="purchase-item-row"><span>' + item.name + ' x' + item.qty + '</span><span>$' + (item.price * item.qty).toFixed(2) + '</span></div>';
+    }).join("");
+
+    var card = document.createElement("article");
+    card.className = "dash-card purchase-card";
+    card.innerHTML =
+      '<div class="purchase-top"><span class="purchase-date">' + clientName + ' · ' + date + '</span>' +
+      '<span class="purchase-total">$' + Number(purchase.total).toFixed(2) + '</span></div>' +
+      '<div class="purchase-items">' + itemsHtml + '</div>' +
+      '<div class="appt-actions" style="margin-top:14px;">' +
+        '<button class="appt-btn appt-btn-accept" data-purchase-action="approved" data-purchase-id="' + purchase.id + '"><i data-lucide="check"></i> Marcar pagada</button>' +
+        '<button class="appt-btn appt-btn-reject" data-purchase-action="declined" data-purchase-id="' + purchase.id + '"><i data-lucide="x"></i> Rechazar</button>' +
+      '</div>';
+    list.appendChild(card);
+  });
+  if (window.lucide) lucide.createIcons();
+}
+
+document.addEventListener("click", async function (e) {
+  var btn = e.target.closest("[data-purchase-action]");
+  if (!btn) return;
+
+  btn.disabled = true;
+  var { error } = await supabaseClient
+    .from("purchases")
+    .update({ status: btn.dataset.purchaseAction })
+    .eq("id", btn.dataset.purchaseId);
+
+  if (error) {
+    alert("No se pudo actualizar la compra.");
+    console.error(error);
+    btn.disabled = false;
+    return;
+  }
+
+  await loadPendingPurchases();
+  await loadProductSales(lastCitasAdminTotal);
+});
 
 
 /* ============================================================
@@ -221,7 +295,7 @@ async function loadEarnings() {
    de lo que se reparte en las citas.
    ============================================================ */
 async function loadProductSales(citasAdminTotal) {
-  var { data, error } = await supabaseClient.from("purchases").select("total");
+  var { data, error } = await supabaseClient.from("purchases").select("total").eq("status", "approved");
 
   var totalProducts = 0;
   if (!error && data) {

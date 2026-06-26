@@ -341,6 +341,28 @@ i[data-lucide] { width: 18px; height: 18px; }
 .cart-checkout-msg.ok { color: #2ecc71; }
 .cart-checkout-msg.error { color: var(--color-red); }
 
+.cart-payment-instructions { padding: 22px; border-top: 1px solid var(--color-border); }
+.cpi-title { font-family: var(--font-display); font-size: 1.3rem; margin: 0 0 14px; }
+.cpi-title span { color: var(--color-red); }
+.cpi-text { font-size: .85rem; color: var(--color-text-muted); margin: 0 0 8px; }
+.cpi-method {
+  font-size: .9rem; padding: 10px 12px; margin-bottom: 8px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-bg-alt);
+}
+.cpi-method strong { color: var(--color-text); }
+#cpiWhatsappBtn {
+  display: block; text-align: center; text-decoration: none;
+  background: #25d366; margin-top: 14px; margin-bottom: 10px;
+}
+.cpi-close-btn {
+  width: 100%; padding: 10px; border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border); color: var(--color-text-muted);
+  font-size: .82rem; font-weight: 700; text-transform: uppercase;
+  transition: border-color .2s, color .2s;
+}
+.cpi-close-btn:hover { border-color: var(--color-red); color: var(--color-text); }
+
 
 /* ============================================================
    7. CTA / CONTACTO

@@ -115,16 +115,24 @@ create trigger trg_appointments_updated_at
 -- 4. PURCHASES
 -- Una fila por compra del carrito (no por producto).
 -- items: [{ "name": "Pomada Mate", "price": 18, "qty": 2 }, ...]
+-- status empieza en 'pending' y el webhook de Mercado Pago (Edge
+-- Function mp-webhook) la actualiza a 'approved' o 'declined' cuando
+-- el pago se confirma de verdad. Las ganancias del admin SOLO deben
+-- contar las compras 'approved'.
 -- ============================================================
 create table if not exists public.purchases (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null references public.profiles(id),
   items jsonb not null,
   total numeric not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'declined')),
+  payment_reference text unique,
+  payment_provider_id text,
   created_at timestamptz not null default now()
 );
 
 create index if not exists idx_purchases_client on public.purchases(client_id);
+create index if not exists idx_purchases_reference on public.purchases(payment_reference);
 
 
 -- ============================================================
@@ -287,6 +295,12 @@ create policy "purchases_select_own_or_admin" on public.purchases
 drop policy if exists "purchases_insert_own" on public.purchases;
 create policy "purchases_insert_own" on public.purchases
   for insert with check (client_id = auth.uid());
+
+-- El admin confirma pagos manuales (Nequi/Bancolombia) marcando la
+-- compra como aprobada o rechazada desde su panel.
+drop policy if exists "purchases_update_admin" on public.purchases;
+create policy "purchases_update_admin" on public.purchases
+  for update using (public.is_admin());
 
 -- ---------- reviews ----------
 -- Públicas para lectura (se muestran en el home a cualquiera).

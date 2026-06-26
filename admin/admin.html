@@ -49,6 +49,14 @@
       </div>
     </div>
 
+    <!-- ===================== COMPRAS PENDIENTES DE PAGO ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="receipt"></i> Compras pendientes de pago</h2>
+      <div class="cards-grid cols-3" id="pending-purchases-list">
+        <p class="dashboard-empty">Cargando...</p>
+      </div>
+    </div>
+
     <!-- ===================== VENTAS DE LA TIENDA (PRODUCTOS) ===================== -->
     <div class="dashboard-block">
       <h2 class="dashboard-block-title"><i data-lucide="shopping-bag"></i> Ventas de la tienda (productos)</h2>
@@ -145,6 +153,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.378.0/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../global/supabase-client.js"></script>
+<script src="../global/payment-info.js"></script>
 <script src="../global/auth.js"></script>
 <script src="../global/global.js"></script>
 <script src="admin.js"></script>
