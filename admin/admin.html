@@ -170,6 +170,29 @@
       </div>
     </div>
 
+    <!-- ===================== GESTIONAR USUARIOS (eliminar) ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="user-x"></i> Gestionar usuarios</h2>
+
+      <h3 class="dashboard-subblock-title">Empleados</h3>
+      <div class="cards-grid cols-3" id="employees-manage-list">
+        <p class="dashboard-empty">Cargando...</p>
+      </div>
+
+      <h3 class="dashboard-subblock-title">Buscar cliente para eliminar</h3>
+      <div class="dash-card" style="max-width:480px;">
+        <form class="dash-form" id="find-client-form">
+          <div>
+            <label for="find-client-cedula">Cédula del cliente</label>
+            <input type="text" id="find-client-cedula" placeholder="Número de cédula" inputmode="numeric" required>
+          </div>
+          <button type="submit" class="dash-form-submit">Buscar</button>
+          <p class="dash-form-msg" id="find-client-msg"></p>
+        </form>
+        <div id="found-client-card" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
   </div>
 </section>
 

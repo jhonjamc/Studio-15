@@ -70,8 +70,8 @@ where not exists (select 1 from public.services);
 -- ============================================================
 create table if not exists public.appointments (
   id uuid primary key default gen_random_uuid(),
-  client_id uuid references public.profiles(id),
-  employee_id uuid references public.profiles(id),
+  client_id uuid references public.profiles(id) on delete cascade,
+  employee_id uuid references public.profiles(id) on delete cascade,
   service_id uuid references public.services(id),
   service_name text not null,
   price numeric not null,
@@ -125,7 +125,7 @@ create trigger trg_appointments_updated_at
 -- ============================================================
 create table if not exists public.purchases (
   id uuid primary key default gen_random_uuid(),
-  client_id uuid not null references public.profiles(id),
+  client_id uuid not null references public.profiles(id) on delete cascade,
   items jsonb not null,
   total numeric not null,
   status text not null default 'pending' check (status in ('pending', 'approved', 'declined')),
@@ -146,7 +146,7 @@ create index if not exists idx_purchases_reference on public.purchases(payment_r
 -- ============================================================
 create table if not exists public.reviews (
   id uuid primary key default gen_random_uuid(),
-  client_id uuid not null references public.profiles(id),
+  client_id uuid not null references public.profiles(id) on delete cascade,
   client_name text not null,
   rating integer not null check (rating between 1 and 5),
   comment text,

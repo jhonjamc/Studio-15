@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadPendingPurchases();
   await loadClientsLoyalty();
   setupLinkEmployeeForm();
+  setupUserManagement();
 
   if (window.lucide) lucide.createIcons();
 });
@@ -570,3 +571,117 @@ function setupLinkEmployeeForm() {
     await loadEarnings();
   });
 }
+
+
+/* ============================================================
+   GESTIONAR USUARIOS: eliminar empleados o clientes
+   ⚠️ Borra TAMBIÉN sus citas, compras y reseñas (no se puede
+   deshacer). Solo el admin puede hacerlo, y no puede borrarse
+   a sí mismo (la Edge Function también lo bloquea).
+   ============================================================ */
+async function deleteUserAccount(userId) {
+  var { data, error } = await supabaseClient.functions.invoke("admin-delete-user", {
+    body: { userId: userId },
+  });
+
+  if (error || !data || data.error) {
+    alert("No se pudo eliminar: " + ((data && data.error) || (error && error.message) || "intenta de nuevo."));
+    console.error(error || (data && data.error));
+    return;
+  }
+
+  await loadProfilesCache();
+  await loadEmployeesManageList();
+  await loadAppointments();
+  await loadEarnings();
+  await loadClientsLoyalty();
+}
+
+function setupUserManagement() {
+  loadEmployeesManageList();
+
+  var findForm = document.getElementById("find-client-form");
+  var findMsg = document.getElementById("find-client-msg");
+  var foundCard = document.getElementById("found-client-card");
+
+  findForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    findMsg.textContent = "";
+    findMsg.className = "dash-form-msg";
+    foundCard.innerHTML = "";
+
+    var cedula = document.getElementById("find-client-cedula").value.trim();
+    if (!cedula) return;
+
+    var { data, error } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("cedula", cedula)
+      .maybeSingle();
+
+    if (error || !data) {
+      findMsg.textContent = "No se encontró ningún usuario con esa cédula.";
+      findMsg.classList.add("error");
+      return;
+    }
+
+    foundCard.innerHTML =
+      '<div class="dash-card">' +
+        '<p class="dash-card-label">' + (data.role === "client" ? "Cliente" : data.role === "employee" ? "Empleado" : "Admin") + '</p>' +
+        '<p class="dash-card-value" style="font-size:1.3rem;">' + (data.full_name || "Sin nombre") + '</p>' +
+        '<p class="dash-card-sub">Cédula: ' + (data.cedula || "—") + ' · Tel: ' + (data.phone || "—") + '</p>' +
+        '<button type="button" class="appt-btn appt-btn-reject" style="margin-top:12px;" id="delete-found-user-btn">' +
+          '<i data-lucide="trash-2"></i> Eliminar este usuario' +
+        '</button>' +
+      '</div>';
+    if (window.lucide) lucide.createIcons();
+
+    document.getElementById("delete-found-user-btn").addEventListener("click", function () {
+      showConfirmDialog(
+        "¿Eliminar a " + (data.full_name || "este usuario") + "? Esto borra también sus citas, compras y reseñas. No se puede deshacer.",
+        function () {
+          deleteUserAccount(data.id);
+          foundCard.innerHTML = "";
+          findForm.reset();
+        }
+      );
+    });
+  });
+}
+
+async function loadEmployeesManageList() {
+  var list = document.getElementById("employees-manage-list");
+  var employees = Object.keys(profilesById)
+    .map(function (id) { return profilesById[id]; })
+    .filter(function (p) { return p.role === "employee"; });
+
+  if (!employees.length) {
+    list.innerHTML = '<p class="dashboard-empty">No tienes empleados todavía.</p>';
+    return;
+  }
+
+  list.innerHTML = "";
+  employees.forEach(function (emp) {
+    var card = document.createElement("article");
+    card.className = "dash-card";
+    card.innerHTML =
+      '<p class="dash-card-label">Empleado</p>' +
+      '<p class="dash-card-value" style="font-size:1.2rem;">' + (emp.full_name || "Sin nombre") + '</p>' +
+      '<p class="dash-card-sub">Cédula: ' + (emp.cedula || "—") + ' · Comisión: ' + emp.commission_percentage + '%</p>' +
+      '<button type="button" class="appt-btn appt-btn-reject" style="margin-top:12px;" data-delete-employee="' + emp.id + '">' +
+        '<i data-lucide="trash-2"></i> Eliminar' +
+      '</button>';
+    list.appendChild(card);
+  });
+  if (window.lucide) lucide.createIcons();
+}
+
+document.addEventListener("click", function (e) {
+  var btn = e.target.closest("[data-delete-employee]");
+  if (!btn) return;
+  var emp = profilesById[btn.dataset.deleteEmployee];
+  showConfirmDialog(
+    "¿Eliminar a " + (emp ? emp.full_name : "este empleado") + "? Esto borra también sus citas. No se puede deshacer.",
+    function () { deleteUserAccount(btn.dataset.deleteEmployee); }
+  );
+});
