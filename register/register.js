@@ -61,9 +61,10 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.textContent = "Crear cuenta";
 
     if (error) {
+      console.error("Error en signUp:", error);
       showError(error.message === "User already registered"
         ? "Ese correo ya tiene una cuenta."
-        : "No se pudo crear la cuenta. Intenta de nuevo.");
+        : "No se pudo crear la cuenta: " + error.message);
       return;
     }
 
