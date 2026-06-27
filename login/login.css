@@ -66,6 +66,7 @@
 }
 .toggle-password-btn:hover { color: #151717; }
 .toggle-password-btn svg, .toggle-password-btn i { width: 18px; height: 18px; }
+.inputForm .toggle-password-btn svg { color: inherit; }
 .toggle-password-btn .icon-hide { display: none; }
 .toggle-password-btn.showing .icon-show { display: none; }
 .toggle-password-btn.showing .icon-hide { display: block; }
@@ -74,7 +75,9 @@
   margin-left: 10px;
   border-radius: var(--radius-sm);
   border: none;
-  width: 85%;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
   height: 100%;
   font-family: var(--font-sans);
   font-size: 16px; /* evita que iOS haga zoom automático al enfocar el input */

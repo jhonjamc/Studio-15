@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadPendingPurchases();
   await loadClientsLoyalty();
   setupUserManagement();
+  setupPuestoForm();
 
   if (window.lucide) lucide.createIcons();
 });
@@ -339,39 +340,50 @@ async function loadEarnings() {
   document.getElementById("kpi-revenue").textContent = "$" + totalRevenue.toFixed(2);
   document.getElementById("kpi-employees-total").textContent = "$" + totalEmployees.toFixed(2);
   document.getElementById("kpi-admin-total").textContent = "$" + totalAdmin.toFixed(2);
-  var maxEarning = Math.max.apply(null, Object.keys(byEmployee).map(function (id) {
-    return id === currentAdminId ? byEmployee[id].earning + byEmployee[id].shop : byEmployee[id].earning;
-  }).concat([0.01]));
 
-  var ids = Object.keys(byEmployee);
-  if (!ids.length) {
-    card.innerHTML = '<p class="dashboard-empty">Todavía no hay citas completadas.</p>';
+  // Solo empleados (puestos 2-4), el admin no aparece aquí — sus
+  // ganancias ya están en los KPIs de arriba.
+  var employeeIds = Object.keys(byEmployee).filter(function (id) { return id !== currentAdminId; });
+
+  if (!employeeIds.length) {
+    card.innerHTML = '<p class="dashboard-empty">Todavía no hay citas completadas de ningún puesto.</p>';
     lastCitasAdminTotal = totalAdmin;
     return totalAdmin;
   }
 
-  card.innerHTML = "";
-  ids.forEach(function (id) {
-    var name = getStaffLabel(profilesById[id]);
-    var isAdmin = id === currentAdminId;
-    // Para el admin, sus citas son 100% para él (su comisión + lo que
-    // normalmente queda para "el negocio", porque el negocio es él).
-    var value = isAdmin ? byEmployee[id].earning + byEmployee[id].shop : byEmployee[id].earning;
-    var pct = (value / maxEarning) * 100;
+  card.innerHTML = '<div class="cards-grid cols-3" id="employee-earnings-grid"></div>';
+  var grid = document.getElementById("employee-earnings-grid");
 
-    var row = document.createElement("div");
-    row.className = "earnings-row";
-    row.innerHTML =
-      '<div class="earnings-row-top">' +
-        '<span class="earnings-row-name">' + name + (isAdmin ? " (tú)" : "") + '</span>' +
-        '<span class="earnings-row-value">$' + value.toFixed(2) + '</span>' +
-      '</div>' +
-      '<div class="earnings-track"><div class="earnings-fill' + (isAdmin ? " blue" : "") + '" style="width:' + pct + '%"></div></div>';
-    card.appendChild(row);
+  employeeIds.forEach(function (id) {
+    var label = getStaffLabel(profilesById[id]);
+    var hisShare = byEmployee[id].earning;
+    var yourShare = byEmployee[id].shop;
+    var total = hisShare + yourShare;
+
+    var puestoCard = document.createElement("article");
+    puestoCard.className = "dash-card";
+    puestoCard.innerHTML =
+      '<p class="dash-card-label">Puesto de trabajo</p>' +
+      '<p class="dash-card-value" style="font-size:1.4rem;">' + label + '</p>' +
+      '<div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">' +
+        '<div style="display:flex; justify-content:space-between; font-size:.85rem;">' +
+          '<span style="color:var(--color-text-muted);">Total generado</span>' +
+          '<span style="font-weight:700;">$' + total.toFixed(2) + '</span>' +
+        '</div>' +
+        '<div style="display:flex; justify-content:space-between; font-size:.85rem;">' +
+          '<span style="color:var(--color-text-muted);">Le corresponde a él</span>' +
+          '<span style="font-weight:700; color:var(--color-red);">$' + hisShare.toFixed(2) + '</span>' +
+        '</div>' +
+        '<div style="display:flex; justify-content:space-between; font-size:.85rem;">' +
+          '<span style="color:var(--color-text-muted);">Le corresponde a ti</span>' +
+          '<span style="font-weight:700; color:var(--color-blue);">$' + yourShare.toFixed(2) + '</span>' +
+        '</div>' +
+      '</div>';
+    grid.appendChild(puestoCard);
   });
 
   lastCitasAdminTotal = totalAdmin;
-    return totalAdmin;
+  return totalAdmin;
 }
 
 
@@ -703,3 +715,56 @@ document.addEventListener("click", function (e) {
     function () { deleteUserAccount(btn.dataset.deleteEmployee); }
   );
 });
+
+
+/* ============================================================
+   ASIGNAR PUESTO DE TRABAJO (sin nombre, sin correo)
+   ============================================================ */
+function setupPuestoForm() {
+  var form = document.getElementById("puesto-setup-form");
+  var msgEl = document.getElementById("puesto-setup-msg");
+  var submitBtn = form.querySelector(".dash-form-submit");
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    msgEl.textContent = "";
+    msgEl.className = "dash-form-msg";
+
+    var puestoNumber = parseInt(document.getElementById("puesto-number-select").value, 10);
+    var username = document.getElementById("puesto-username").value.trim();
+    var password = document.getElementById("puesto-password").value.trim();
+
+    if (!username || !password) {
+      msgEl.textContent = "Completa el usuario y la contraseña.";
+      msgEl.classList.add("error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Guardando...";
+
+    var { data, error } = await supabaseClient.functions.invoke("admin-setup-puesto", {
+      body: { puestoNumber: puestoNumber, username: username, password: password },
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Guardar puesto";
+
+    if (error || !data || data.error) {
+      msgEl.textContent = "No se pudo guardar: " + ((data && data.error) || (error && error.message) || "intenta de nuevo.");
+      msgEl.classList.add("error");
+      console.error(error || (data && data.error));
+      return;
+    }
+
+    msgEl.textContent = data.action === "updated"
+      ? "Listo, se actualizó el usuario/contraseña de ese puesto."
+      : "¡Puesto " + puestoNumber + " creado! Ya puede iniciar sesión con ese usuario.";
+    msgEl.classList.add("ok");
+    form.reset();
+
+    await loadProfilesCache();
+    await loadEarnings();
+    await loadWeeklyPayouts();
+  });
+}

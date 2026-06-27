@@ -147,14 +147,34 @@
 
     <!-- ===================== PUESTOS (FIJOS) ===================== -->
     <div class="dashboard-block">
-      <h2 class="dashboard-block-title"><i data-lucide="armchair"></i> Puestos de trabajo</h2>
-      <div class="dash-card" style="max-width:560px;">
-        <p class="dash-card-sub">
-          Los puestos (1 = tú, 2 a 4 = empleados) son cuentas fijas: el usuario y la
-          contraseña no cambian, sin importar quién esté trabajando ese día en cada silla.
-          No es necesario "crear" empleados — solo asigna el código de cada puesto
-          siguiendo la guía en <strong>SETUP.md</strong> (una sola vez por puesto).
+      <h2 class="dashboard-block-title"><i data-lucide="armchair"></i> Asignar puesto de trabajo</h2>
+      <div class="dash-card" style="max-width:480px;">
+        <p class="dash-card-sub" style="margin-bottom:14px;">
+          Cuando entre un empleado nuevo, dale el usuario y la contraseña de su puesto
+          aquí mismo — sin nombre, sin correo. El usuario y la contraseña se quedan
+          fijos para ese puesto (si vuelves a usar el mismo puesto, esto solo le
+          cambia la contraseña).
         </p>
+        <form class="dash-form" id="puesto-setup-form">
+          <div>
+            <label for="puesto-number-select">Puesto</label>
+            <select id="puesto-number-select">
+              <option value="2">Puesto 2</option>
+              <option value="3">Puesto 3</option>
+              <option value="4">Puesto 4</option>
+            </select>
+          </div>
+          <div>
+            <label for="puesto-username">Usuario (con esto inicia sesión)</label>
+            <input type="text" id="puesto-username" placeholder="Ej: PUESTO2" required>
+          </div>
+          <div>
+            <label for="puesto-password">Contraseña</label>
+            <input type="password" id="puesto-password" placeholder="Mínimo 6 caracteres" required>
+          </div>
+          <button type="submit" class="dash-form-submit">Guardar puesto</button>
+          <p class="dash-form-msg" id="puesto-setup-msg"></p>
+        </form>
       </div>
     </div>
 

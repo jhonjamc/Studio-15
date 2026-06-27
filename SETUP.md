@@ -118,30 +118,24 @@ supabase functions deploy admin-delete-user
   usuarios" en su panel. ⚠️ Borra también sus citas/compras/reseñas.
 
 ## 7. Puestos de trabajo (1 = admin, 2 a 4 = empleados)
-Ya no se "crean" empleados con nombre — son 4 cuentas fijas por puesto,
-con usuario y contraseña que NO cambian (sin importar quién trabaje ahí
-ese día). Para crear cada puesto (una sola vez, no se repite):
+Despliega esta función nueva (no necesita secrets nuevos):
+```
+supabase functions deploy admin-setup-puesto
+```
 
-1. Ve a `register.html` y regístrate como si fueras un cliente normal,
-   pero en el campo "Cédula" escribe un código identificador para ese
-   puesto, por ejemplo `PUESTO2` (en mayúsculas, sin espacios). Usa la
-   contraseña fija que va a usar quien trabaje en esa silla.
-2. SQL Editor de Supabase, corre (cambiando el código y el número):
-   ```sql
-   update public.profiles
-   set role = 'employee', puesto_number = 2, commission_percentage = 50
-   where cedula = 'PUESTO2';
-   ```
-3. Repite para `PUESTO3` y `PUESTO4`.
-4. Para el puesto 1 (tú, el admin), si todavía no lo tienes así:
-   ```sql
-   update public.profiles
-   set role = 'admin', puesto_number = 1
-   where cedula = 'TU-CODIGO-O-CEDULA';
-   ```
+Puestos 2, 3 y 4: desde el panel de admin → **"Asignar puesto de trabajo"**
+→ eliges el puesto, pones un usuario (ej. `PUESTO2`) y una contraseña →
+"Guardar puesto". Ya queda creado, sin SQL y sin Supabase. Si ese puesto
+ya existía, esto solo le cambia la contraseña (el número de puesto no
+cambia nunca).
 
-Desde ese momento, quien sea que esté en la silla 2 inicia sesión con
-`PUESTO2` + esa contraseña — no hace falta volver a crear nada.
+Puesto 1 (tú, el admin): si todavía no tienes `puesto_number` asignado,
+corre una vez en el SQL Editor (solo para ti, porque tú ya tienes cuenta):
+```sql
+update public.profiles
+set role = 'admin', puesto_number = 1
+where cedula = 'TU-CODIGO-O-CEDULA';
+```
 
 ## 8. Bebidas (registro manual, solo admin)
 Ya no están en el carrito de los clientes. El admin las registra a mano
