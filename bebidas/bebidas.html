@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTUDIO 15 - BEBIDAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" />
+<link rel="stylesheet" href="../global/global.css">
+<link rel="stylesheet" href="../global/dashboard.css">
+</head>
+<body>
+
+<div id="site-dashboard-header" data-panel-label="Panel Administrador"></div>
+
+<section class="dashboard-section">
+  <div class="dashboard-inner">
+
+    <div class="dashboard-header">
+      <div>
+        <h1 class="dashboard-title">Bebidas</h1>
+        <p class="dashboard-subtitle">Registra a mano cada venta de bebida en el local. No pasa por el carrito de los clientes — esta ganancia es 100% tuya.</p>
+      </div>
+    </div>
+
+    <!-- ===================== REGISTRAR VENTA ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="cup-soda"></i> Registrar venta</h2>
+      <div class="dash-card" style="max-width:480px;">
+        <form class="dash-form" id="drink-sale-form">
+          <div>
+            <label for="drink-name">Bebida</label>
+            <select id="drink-name">
+              <option value="Coca-Cola">Coca-Cola</option>
+              <option value="Sprite">Sprite</option>
+              <option value="Agua con gas">Agua con gas</option>
+              <option value="Jugo de naranja">Jugo de naranja</option>
+              <option value="Otra">Otra (escribir abajo)</option>
+            </select>
+          </div>
+          <div>
+            <label for="drink-name-custom">Nombre (si elegiste "Otra")</label>
+            <input type="text" id="drink-name-custom" placeholder="Ej: Gatorade">
+          </div>
+          <div>
+            <label for="drink-price">Precio unitario</label>
+            <input type="number" id="drink-price" min="0" step="0.5" placeholder="3" required>
+          </div>
+          <div>
+            <label for="drink-qty">Cantidad</label>
+            <input type="number" id="drink-qty" min="1" value="1" required>
+          </div>
+          <button type="submit" class="dash-form-submit">Registrar venta</button>
+          <p class="dash-form-msg" id="drink-sale-msg"></p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===================== RESUMEN ===================== -->
+    <div class="dashboard-block">
+      <div class="cards-grid cols-3">
+        <div class="dash-card">
+          <p class="dash-card-label">Hoy</p>
+          <p class="dash-card-value" id="kpi-drinks-today">$0.00</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Esta semana</p>
+          <p class="dash-card-value" id="kpi-drinks-week">$0.00</p>
+        </div>
+        <div class="dash-card">
+          <p class="dash-card-label">Total histórico</p>
+          <p class="dash-card-value" id="kpi-drinks-total">$0.00</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== ÚLTIMAS VENTAS ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="list"></i> Últimas ventas registradas</h2>
+      <div class="cards-grid cols-3" id="drink-sales-list">
+        <p class="dashboard-empty">Cargando...</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div id="site-dashboard-footer"></div>
+<div id="site-cart"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.378.0/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../global/supabase-client.js"></script>
+<script src="../global/payment-info.js"></script>
+<script src="../global/auth.js"></script>
+<script src="../global/global.js"></script>
+<script src="../global/context-menu.js"></script>
+<script src="bebidas.js"></script>
+
+</body>
+</html>

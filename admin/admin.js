@@ -23,15 +23,16 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (!profile) return;
 
   currentAdminId = profile.id;
-  document.getElementById("admin-name").textContent = profile.full_name || "Admin";
+  document.getElementById("admin-name").textContent = getStaffLabel(profile);
+  addBebidasNavLink();
 
   await loadProfilesCache();
   await loadAppointments();
   var citasAdminTotal = await loadEarnings();
+  await loadWeeklyPayouts();
   await loadProductSales(citasAdminTotal);
   await loadPendingPurchases();
   await loadClientsLoyalty();
-  setupLinkEmployeeForm();
   setupUserManagement();
 
   if (window.lucide) lucide.createIcons();
@@ -126,7 +127,7 @@ function buildAppointmentCard(appt, showEmployeeName, compact) {
   var employeeLabel = "";
   if (showEmployeeName) {
     var emp = profilesById[appt.employee_id];
-    employeeLabel = '<p class="appt-service">Barbero: ' + (emp ? emp.full_name : "—") + '</p>';
+    employeeLabel = '<p class="appt-service">Barbero: ' + getStaffLabel(emp) + '</p>';
   }
 
   var actionsHtml = "";
@@ -295,6 +296,7 @@ document.addEventListener("click", async function (e) {
 
   await loadAppointments();
   await loadEarnings();
+  await loadWeeklyPayouts();
   await loadClientsLoyalty();
 });
 
@@ -350,7 +352,7 @@ async function loadEarnings() {
 
   card.innerHTML = "";
   ids.forEach(function (id) {
-    var name = profilesById[id] ? profilesById[id].full_name : "—";
+    var name = getStaffLabel(profilesById[id]);
     var isAdmin = id === currentAdminId;
     // Para el admin, sus citas son 100% para él (su comisión + lo que
     // normalmente queda para "el negocio", porque el negocio es él).
@@ -457,9 +459,74 @@ async function loadProductSales(citasAdminTotal) {
     console.error(error);
   }
 
+  var { data: drinkData, error: drinkError } = await supabaseClient.from("drink_sales").select("total");
+  var totalDrinks = 0;
+  if (!drinkError && drinkData) {
+    totalDrinks = drinkData.reduce(function (sum, d) { return sum + Number(d.total); }, 0);
+  } else if (drinkError) {
+    console.error(drinkError);
+  }
+
   document.getElementById("kpi-products-total").textContent = "$" + totalProducts.toFixed(2);
   document.getElementById("kpi-products-count").textContent = (data ? data.length : 0);
-  document.getElementById("kpi-grand-total").textContent = "$" + (Number(citasAdminTotal || 0) + totalProducts).toFixed(2);
+  document.getElementById("kpi-drinks-total-summary").textContent = "$" + totalDrinks.toFixed(2);
+  document.getElementById("kpi-grand-total").textContent = "$" + (Number(citasAdminTotal || 0) + totalProducts + totalDrinks).toFixed(2);
+}
+
+
+/* ============================================================
+   PAGO SEMANAL POR PUESTO
+   Semana actual (lunes a domingo). Cada puesto se queda con su
+   comisión, el resto queda para ti. El domingo esto representa
+   la semana completa lista para pagar.
+   ============================================================ */
+async function loadWeeklyPayouts() {
+  var list = document.getElementById("weekly-payout-list");
+
+  var now = new Date();
+  var day = now.getDay(); // 0 = domingo
+  var diffToMonday = day === 0 ? -6 : 1 - day;
+  var monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+  var mondayStr = monday.toISOString().split("T")[0];
+
+  var { data, error } = await supabaseClient
+    .from("appointment_earnings")
+    .select("*")
+    .gte("appointment_date", mondayStr);
+
+  if (error) {
+    list.innerHTML = '<p class="dashboard-empty">No se pudieron cargar los pagos.</p>';
+    console.error(error);
+    return;
+  }
+
+  var byEmployee = {};
+  data.forEach(function (row) {
+    if (row.employee_id === currentAdminId) return; // a uno mismo no se "paga"
+    if (!byEmployee[row.employee_id]) byEmployee[row.employee_id] = 0;
+    byEmployee[row.employee_id] += Number(row.performer_earning);
+  });
+
+  var ids = Object.keys(byEmployee);
+  if (!ids.length) {
+    list.innerHTML = '<p class="dashboard-empty">Ningún puesto tiene citas completadas esta semana todavía.</p>';
+    return;
+  }
+
+  list.innerHTML = "";
+  ids.forEach(function (id) {
+    var emp = profilesById[id];
+    var amount = byEmployee[id];
+    var card = document.createElement("article");
+    card.className = "dash-card";
+    card.innerHTML =
+      '<p class="dash-card-label">' + getStaffLabel(emp) + '</p>' +
+      '<p class="dash-card-value">$' + amount.toFixed(2) + '</p>' +
+      '<p class="dash-card-sub">Eso es lo que le pagas esta semana</p>';
+    list.appendChild(card);
+  });
 }
 
 
@@ -509,67 +576,18 @@ async function loadClientsLoyalty() {
 
 
 /* ============================================================
-   VINCULAR EMPLEADO
+   ENLACE A BEBIDAS EN EL NAVBAR (solo admin)
    ============================================================ */
-function setupLinkEmployeeForm() {
-  var form = document.getElementById("link-employee-form");
-  var msgEl = document.getElementById("link-employee-msg");
-  var submitBtn = form.querySelector(".dash-form-submit");
-
-  form.addEventListener("submit", async function (e) {
-    e.preventDefault();
-    msgEl.textContent = "";
-    msgEl.className = "dash-form-msg";
-
-    var name = document.getElementById("emp-name").value.trim();
-    var cedula = document.getElementById("emp-cedula").value.trim();
-    var phone = document.getElementById("emp-phone").value.trim();
-    var email = document.getElementById("emp-email").value.trim();
-    var password = document.getElementById("emp-password").value.trim();
-    var commission = parseFloat(document.getElementById("emp-commission").value);
-
-    if (!name || !cedula || !email || !password) {
-      msgEl.textContent = "Completa nombre, cédula, correo y contraseña.";
-      msgEl.classList.add("error");
-      return;
-    }
-    if (password.length < 6) {
-      msgEl.textContent = "La contraseña debe tener al menos 6 caracteres.";
-      msgEl.classList.add("error");
-      return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Creando...";
-
-    var { data, error } = await supabaseClient.functions.invoke("admin-create-employee", {
-      body: {
-        fullName: name,
-        cedula: cedula,
-        phone: phone,
-        email: email,
-        password: password,
-        commissionPercentage: commission,
-      },
-    });
-
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Crear empleado";
-
-    if (error || !data || data.error) {
-      msgEl.textContent = "No se pudo crear: " + ((data && data.error) || (error && error.message) || "intenta de nuevo.");
-      msgEl.classList.add("error");
-      console.error(error || data.error);
-      return;
-    }
-
-    msgEl.textContent = "¡Empleado creado correctamente! Ya puede iniciar sesión con su cédula.";
-    msgEl.classList.add("ok");
-    form.reset();
-    document.getElementById("emp-commission").value = 50;
-    await loadProfilesCache();
-    await loadEarnings();
-  });
+function addBebidasNavLink() {
+  var label = document.getElementById("dashboard-panel-label");
+  if (!label || document.getElementById("bebidas-nav-link")) return;
+  var link = document.createElement("a");
+  link.id = "bebidas-nav-link";
+  link.href = "../bebidas/bebidas.html";
+  link.className = "dashboard-panel-label dashboard-bebidas-link";
+  link.innerHTML = '<i data-lucide="cup-soda"></i> Bebidas';
+  label.insertAdjacentElement("afterend", link);
+  if (window.lucide) lucide.createIcons();
 }
 
 
@@ -666,7 +684,7 @@ async function loadEmployeesManageList() {
     card.className = "dash-card";
     card.innerHTML =
       '<p class="dash-card-label">Empleado</p>' +
-      '<p class="dash-card-value" style="font-size:1.2rem;">' + (emp.full_name || "Sin nombre") + '</p>' +
+      '<p class="dash-card-value" style="font-size:1.2rem;">' + getStaffLabel(emp) + '</p>' +
       '<p class="dash-card-sub">Cédula: ' + (emp.cedula || "—") + ' · Comisión: ' + emp.commission_percentage + '%</p>' +
       '<button type="button" class="appt-btn appt-btn-reject" style="margin-top:12px;" data-delete-employee="' + emp.id + '">' +
         '<i data-lucide="trash-2"></i> Eliminar' +
@@ -681,7 +699,7 @@ document.addEventListener("click", function (e) {
   if (!btn) return;
   var emp = profilesById[btn.dataset.deleteEmployee];
   showConfirmDialog(
-    "¿Eliminar a " + (emp ? emp.full_name : "este empleado") + "? Esto borra también sus citas. No se puede deshacer.",
+    "¿Eliminar a " + getStaffLabel(emp) + "? Esto borra también sus citas. No se puede deshacer.",
     function () { deleteUserAccount(btn.dataset.deleteEmployee); }
   );
 });

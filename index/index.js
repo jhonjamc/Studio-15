@@ -253,21 +253,22 @@ async function initBookingWidget() {
   } else {
     barbersList.innerHTML = "";
     barbers.forEach(function (b) {
+      var staffLabel = getStaffLabel(b);
       var card = document.createElement("div");
       card.className = "barber-card";
       card.dataset.id = b.id;
-      card.dataset.name = b.full_name || "Barbero";
+      card.dataset.name = staffLabel;
       card.innerHTML =
         '<div class="barber-avatar-wrapper" style="display:grid;place-items:center;background:var(--color-bg-alt);">' +
           '<i data-lucide="scissors" style="width:32px;height:32px;color:var(--color-red);"></i>' +
         '</div>' +
-        '<h4 class="barber-name">' + (b.full_name || "Barbero") + '</h4>' +
+        '<h4 class="barber-name">' + staffLabel + '</h4>' +
         '<span class="barber-role">' + (b.role === "admin" ? "Barbero principal" : "Barbero") + '</span>';
       card.addEventListener("click", function () {
         barbersList.querySelectorAll(".barber-card").forEach(function (c) { c.classList.remove("selected"); });
         card.classList.add("selected");
         booking.barberId = b.id;
-        booking.barberName = b.full_name || "Barbero";
+        booking.barberName = staffLabel;
         clearError();
         refreshTimeSlots();
       });

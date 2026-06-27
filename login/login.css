@@ -66,6 +66,9 @@
 }
 .toggle-password-btn:hover { color: #151717; }
 .toggle-password-btn svg, .toggle-password-btn i { width: 18px; height: 18px; }
+.toggle-password-btn .icon-hide { display: none; }
+.toggle-password-btn.showing .icon-show { display: none; }
+.toggle-password-btn.showing .icon-hide { display: block; }
 
 .input {
   margin-left: 10px;

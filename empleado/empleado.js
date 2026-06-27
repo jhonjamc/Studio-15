@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (!profile) return;
 
   currentEmployeeId = profile.id;
-  document.getElementById("employee-name").textContent = profile.full_name || "Empleado";
+  document.getElementById("employee-name").textContent = getStaffLabel(profile);
   document.getElementById("kpi-commission-pct").textContent = profile.commission_percentage + "%";
 
   await loadAppointments();

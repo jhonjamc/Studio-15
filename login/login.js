@@ -27,8 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
     toggleBtn.addEventListener("click", function () {
       var showing = passwordInput.type === "text";
       passwordInput.type = showing ? "password" : "text";
-      toggleBtn.innerHTML = '<i data-lucide="' + (showing ? "eye" : "eye-off") + '"></i>';
-      if (window.lucide) lucide.createIcons();
+      toggleBtn.classList.toggle("showing", !showing);
     });
   }
 

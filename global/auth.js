@@ -92,3 +92,18 @@ document.addEventListener("click", function (e) {
     logout();
   }
 });
+
+
+/* ============================================================
+   5. ETIQUETA DE PUESTO
+   Ya no se muestran nombres de admin/empleados en ningún lado de
+   la app — se identifican por su número de puesto (1 = admin,
+   2/3/4 = empleados). Los clientes sí se siguen mostrando por su
+   nombre real. Si un perfil viejo todavía no tiene puesto_number
+   asignado, cae de vuelta al nombre para no romper la pantalla.
+   ============================================================ */
+function getStaffLabel(profile) {
+  if (!profile) return "—";
+  if (profile.role === "client") return profile.full_name || "Cliente";
+  return profile.puesto_number ? ("Puesto " + profile.puesto_number) : (profile.full_name || "Sin asignar");
+}

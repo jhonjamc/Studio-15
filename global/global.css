@@ -485,3 +485,11 @@ i[data-lucide] { width: 18px; height: 18px; }
   flex-direction: row;
 }
 .dashboard-footer-inner p { margin: 0; font-size: .8rem; color: var(--color-text-muted); }
+
+.dashboard-bebidas-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--color-blue); cursor: pointer; transition: color .2s;
+}
+.dashboard-bebidas-link i { width: 16px; height: 16px; }
+.dashboard-bebidas-link:hover { color: var(--color-red); }
+@media (max-width: 600px) { .dashboard-bebidas-link span { display: none; } }

@@ -103,32 +103,66 @@ cobrar de verdad, activa tus credenciales de producción y cambia el secret
 A diferencia de Wompi, aquí **no necesitas ninguna llave pública en el
 navegador** — todo el trabajo de pago pasa por las Edge Functions.
 
-## 6. Login con cédula y creación de empleados sin Supabase
-Estas dos funciones nuevas no necesitan secrets nuevos (usan las que
-Supabase ya pone automáticamente: SUPABASE_URL, SUPABASE_ANON_KEY,
-SUPABASE_SERVICE_ROLE_KEY). Solo despliégalas:
+## 6. Login con cédula + eliminar usuarios
+Estas funciones no necesitan secrets nuevos (usan las que Supabase ya
+pone automáticamente: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY).
 
 ```
 supabase functions deploy login-with-cedula
-supabase functions deploy admin-create-employee
+supabase functions deploy admin-delete-user
 ```
 
-- `login-with-cedula`: permite iniciar sesión con cédula en vez de
-  correo, sin exponer correos al navegador.
-- `admin-create-employee`: deja crear empleados desde el botón
-  "Crear empleado" del panel de admin, sin tocar Supabase ni copiar
-  ningún UUID. Solo el admin puede llamarla (se valida su rol dentro
-  de la función).
+- `login-with-cedula`: permite iniciar sesión con cédula (clientes) o
+  código de puesto (empleados/admin), sin exponer correos al navegador.
+- `admin-delete-user`: deja al admin eliminar usuarios desde "Gestionar
+  usuarios" en su panel. ⚠️ Borra también sus citas/compras/reseñas.
 
-## 7. Subir el sitio
+## 7. Puestos de trabajo (1 = admin, 2 a 4 = empleados)
+Ya no se "crean" empleados con nombre — son 4 cuentas fijas por puesto,
+con usuario y contraseña que NO cambian (sin importar quién trabaje ahí
+ese día). Para crear cada puesto (una sola vez, no se repite):
+
+1. Ve a `register.html` y regístrate como si fueras un cliente normal,
+   pero en el campo "Cédula" escribe un código identificador para ese
+   puesto, por ejemplo `PUESTO2` (en mayúsculas, sin espacios). Usa la
+   contraseña fija que va a usar quien trabaje en esa silla.
+2. SQL Editor de Supabase, corre (cambiando el código y el número):
+   ```sql
+   update public.profiles
+   set role = 'employee', puesto_number = 2, commission_percentage = 50
+   where cedula = 'PUESTO2';
+   ```
+3. Repite para `PUESTO3` y `PUESTO4`.
+4. Para el puesto 1 (tú, el admin), si todavía no lo tienes así:
+   ```sql
+   update public.profiles
+   set role = 'admin', puesto_number = 1
+   where cedula = 'TU-CODIGO-O-CEDULA';
+   ```
+
+Desde ese momento, quien sea que esté en la silla 2 inicia sesión con
+`PUESTO2` + esa contraseña — no hace falta volver a crear nada.
+
+## 8. Bebidas (registro manual, solo admin)
+Ya no están en el carrito de los clientes. El admin las registra a mano
+desde **Bebidas** en su navbar (`bebidas/bebidas.html`) cuando vende una
+en el local — esa ganancia es 100% suya y se suma sola al total real.
+No necesita ninguna Edge Function ni configuración aparte, solo que ya
+hayas corrido el SQL de la tabla `drink_sales` (paso 1).
+
+## 9. Subir el sitio
 Sube toda la carpeta tal cual (incluida `img/`) a GitHub Pages / Netlify / Vercel.
 La carpeta `supabase/` no se sirve como sitio web, son solo los archivos que usas
 para configurar tu proyecto de Supabase (no afecta el frontend).
 
 ## Notas importantes
-- El registro (`register.html`) **solo crea clientes**. Los empleados y el admin
-  se activan manualmente (pasos 3 y "Vincular empleado") porque crear usuarios de
-  Auth requiere la `service_role key`, que nunca debe estar en el navegador.
+- El registro (`register.html`) crea cuentas como `client` por defecto.
+  Los puestos (admin/empleados) se activan a mano por SQL siguiendo el
+  paso 7 — son cuentas fijas, no se "registran" de nuevo cada vez.
+- La fidelidad ahora es un ciclo de 11 cortes (el 11vo sale gratis).
+- Ya no se muestran nombres de admin/empleados en ningún lado — todo
+  se identifica por "Puesto N". Los clientes sí se siguen mostrando
+  por su nombre real.
 - La barra de fidelidad cuenta TODAS las citas marcadas como `completed`, sin
   distinguir tipo de servicio. Si quieres que solo cuenten los cortes (no barba
   u otros servicios), dímelo y ajusto el trigger en `schema.sql`.

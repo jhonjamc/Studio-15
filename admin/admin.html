@@ -59,7 +59,7 @@
     <!-- ===================== VENTAS DE LA TIENDA (PRODUCTOS) ===================== -->
     <div class="dashboard-block">
       <h2 class="dashboard-block-title"><i data-lucide="shopping-bag"></i> Ventas de la tienda (productos)</h2>
-      <div class="cards-grid cols-3">
+      <div class="cards-grid cols-4">
         <div class="dash-card">
           <p class="dash-card-label">Ingresos por productos</p>
           <p class="dash-card-value" id="kpi-products-total">$0.00</p>
@@ -70,16 +70,32 @@
           <p class="dash-card-value" id="kpi-products-count">0</p>
         </div>
         <div class="dash-card">
+          <p class="dash-card-label">Ingresos por bebidas</p>
+          <p class="dash-card-value" id="kpi-drinks-total-summary">$0.00</p>
+          <p class="dash-card-sub"><a href="../bebidas/bebidas.html" style="color:var(--color-blue);">Registrar venta →</a></p>
+        </div>
+        <div class="dash-card">
           <p class="dash-card-label">Ganancia total real</p>
           <p class="dash-card-value" id="kpi-grand-total">$0.00</p>
-          <p class="dash-card-sub">Citas + productos, todo lo tuyo</p>
+          <p class="dash-card-sub">Citas + productos + bebidas, todo lo tuyo</p>
         </div>
+      </div>
+    </div>
+
+    <!-- ===================== PAGO SEMANAL POR PUESTO ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="calendar-check"></i> Pago semanal por puesto</h2>
+      <p class="dashboard-subtitle" style="margin-bottom:18px;">
+        Semana actual (lunes a domingo). El domingo, esto es lo que le toca pagar a cada puesto.
+      </p>
+      <div class="cards-grid cols-3" id="weekly-payout-list">
+        <p class="dashboard-empty">Cargando...</p>
       </div>
     </div>
 
     <!-- ===================== ANÁLISIS DE GANANCIAS POR EMPLEADO ===================== -->
     <div class="dashboard-block">
-      <h2 class="dashboard-block-title"><i data-lucide="bar-chart-3"></i> Ganancias por empleado</h2>
+      <h2 class="dashboard-block-title"><i data-lucide="bar-chart-3"></i> Ganancias por puesto (histórico)</h2>
       <div class="dash-card" id="employee-earnings-card">
         <p class="dashboard-empty">Cargando ganancias...</p>
       </div>
@@ -129,44 +145,16 @@
       </div>
     </div>
 
-    <!-- ===================== VINCULAR EMPLEADO ===================== -->
+    <!-- ===================== PUESTOS (FIJOS) ===================== -->
     <div class="dashboard-block">
-      <h2 class="dashboard-block-title"><i data-lucide="user-plus"></i> Vincular empleado</h2>
-      <div class="dash-card" style="max-width:480px;">
-        <p class="dash-card-sub" style="margin-bottom:14px;">
-          Crea la cuenta de tu nuevo empleado directamente desde aquí.
+      <h2 class="dashboard-block-title"><i data-lucide="armchair"></i> Puestos de trabajo</h2>
+      <div class="dash-card" style="max-width:560px;">
+        <p class="dash-card-sub">
+          Los puestos (1 = tú, 2 a 4 = empleados) son cuentas fijas: el usuario y la
+          contraseña no cambian, sin importar quién esté trabajando ese día en cada silla.
+          No es necesario "crear" empleados — solo asigna el código de cada puesto
+          siguiendo la guía en <strong>SETUP.md</strong> (una sola vez por puesto).
         </p>
-        <form class="dash-form" id="link-employee-form">
-          <div>
-            <label for="emp-name">Nombre completo</label>
-            <input type="text" id="emp-name" placeholder="Nombre del empleado" required>
-          </div>
-          <div>
-            <label for="emp-cedula">Cédula</label>
-            <input type="text" id="emp-cedula" placeholder="Número de cédula" inputmode="numeric" required>
-          </div>
-          <div>
-            <label for="emp-phone">Teléfono</label>
-            <input type="text" id="emp-phone" placeholder="+57 300 000 0000">
-          </div>
-          <div>
-            <label for="emp-email">Correo</label>
-            <input type="email" id="emp-email" placeholder="correo@ejemplo.com" required>
-          </div>
-          <div>
-            <label for="emp-password">Contraseña inicial</label>
-            <input type="password" id="emp-password" placeholder="Mínimo 6 caracteres" required>
-          </div>
-          <div>
-            <label for="emp-commission">Comisión del empleado (%)</label>
-            <input type="number" id="emp-commission" value="50" min="0" max="100" required>
-            <p class="dash-card-sub" style="margin-top:4px;">
-              Ej: 50% = la mitad para el empleado, la otra mitad para ti.
-            </p>
-          </div>
-          <button type="submit" class="dash-form-submit">Crear empleado</button>
-          <p class="dash-form-msg" id="link-employee-msg"></p>
-        </form>
       </div>
     </div>
 
