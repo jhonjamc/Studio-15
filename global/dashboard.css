@@ -265,21 +265,45 @@
 
 
 /* ============================================================
-   SWIPE TO DELETE (celular, estilo iPhone)
+   SWIPE DE ACCIONES (celular, estilo iPhone)
+   Genérico: sirve para citas y para compras, con 1 o varias
+   acciones (ej. Archivar + Eliminar) reveladas al deslizar.
    ============================================================ */
-.appt-swipe-wrap { position: relative; overflow: hidden; border-radius: var(--radius-md); }
-.appt-swipe-wrap .appt-card { position: relative; z-index: 1; background: var(--color-surface); }
-.appt-swipe-action {
-  position: absolute; top: 0; right: 0; bottom: 0; width: 84px; z-index: 0;
+.swipe-wrap { position: relative; overflow: hidden; border-radius: var(--radius-md); }
+.swipe-wrap .dash-card { position: relative; z-index: 1; background: var(--color-surface); }
+.swipe-actions { position: absolute; top: 0; right: 0; bottom: 0; z-index: 0; display: flex; }
+.swipe-action {
+  width: 84px; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-  background: var(--gradient-red); color: #fff;
-  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: #fff; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
   cursor: pointer;
 }
-.appt-swipe-action i { width: 18px; height: 18px; }
+.swipe-action i { width: 18px; height: 18px; }
+.swipe-action.delete { background: var(--gradient-red); }
+.swipe-action.archive { background: var(--color-blue); }
 /* En PC no hace falta el swipe; se usa clic derecho. Ocultamos el aviso visual de sobra. */
 @media (hover: hover) and (pointer: fine) {
-  .appt-swipe-action { opacity: 0; pointer-events: none; }
+  .swipe-actions { opacity: 0; pointer-events: none; }
 }
 
 .free-badge { color: #2ecc71; font-weight: 800; }
+
+.archive-toggle-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 18px; padding: 8px 16px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  font-size: .78rem; font-weight: 700; color: var(--color-text-muted);
+  transition: border-color .2s, color .2s;
+}
+.archive-toggle-btn:hover { border-color: var(--color-blue); color: var(--color-text); }
+.archive-toggle-btn i { width: 14px; height: 14px; }
+
+.unarchive-btn {
+  margin-top: 10px; width: 100%; padding: 8px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  font-size: .75rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-muted);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: border-color .2s, color .2s;
+}
+.unarchive-btn:hover { border-color: var(--color-blue); color: var(--color-text); }
+.unarchive-btn i { width: 14px; height: 14px; }

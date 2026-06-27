@@ -58,8 +58,10 @@ async function loadAppointments() {
 
   var ownPending = document.getElementById("own-appointments-pending");
   var ownCompleted = document.getElementById("own-appointments-completed");
+  var ownArchived = document.getElementById("own-appointments-archived");
   var teamPending = document.getElementById("team-appointments-pending");
   var teamCompleted = document.getElementById("team-appointments-completed");
+  var teamArchived = document.getElementById("team-appointments-archived");
 
   if (error) {
     ownPending.innerHTML = teamPending.innerHTML = '<p class="dashboard-empty">No se pudieron cargar las citas.</p>';
@@ -70,15 +72,18 @@ async function loadAppointments() {
   var own = data.filter(function (a) { return a.employee_id === currentAdminId; });
   var team = data.filter(function (a) { return a.employee_id !== currentAdminId; });
 
-  // "Pendientes" = todavía no termina (pending/accepted). El resto
-  // (completed/rejected/cancelled) ya está cerrado, va a "Completadas".
   function isPending(a) { return a.status === "pending" || a.status === "accepted"; }
 
-  var ownP = own.filter(isPending), ownC = own.filter(function (a) { return !isPending(a); });
-  var teamP = team.filter(isPending), teamC = team.filter(function (a) { return !isPending(a); });
+  var ownActive = own.filter(function (a) { return !a.is_archived; });
+  var teamActive = team.filter(function (a) { return !a.is_archived; });
+  var ownArch = own.filter(function (a) { return a.is_archived; });
+  var teamArch = team.filter(function (a) { return a.is_archived; });
+
+  var ownP = ownActive.filter(isPending), ownC = ownActive.filter(function (a) { return !isPending(a); });
+  var teamP = teamActive.filter(isPending), teamC = teamActive.filter(function (a) { return !isPending(a); });
 
   document.getElementById("kpi-pending-count").textContent =
-    data.filter(function (a) { return a.status === "pending"; }).length;
+    data.filter(function (a) { return a.status === "pending" && !a.is_archived; }).length;
 
   ownPending.innerHTML = ownP.length ? "" : '<p class="dashboard-empty">No tienes citas pendientes.</p>';
   ownP.forEach(function (a) { ownPending.appendChild(buildAppointmentCard(a, false, false)); });
@@ -92,13 +97,26 @@ async function loadAppointments() {
   teamCompleted.innerHTML = teamC.length ? "" : '<p class="dashboard-empty">Sin historial todavía.</p>';
   teamC.forEach(function (a) { teamCompleted.appendChild(buildAppointmentCard(a, true, true)); });
 
+  document.getElementById("own-appointments-archive-count").textContent = ownArch.length;
+  ownArchived.innerHTML = "";
+  ownArch.forEach(function (a) { ownArchived.appendChild(buildArchivedAppointmentCard(a)); });
+
+  document.getElementById("team-appointments-archive-count").textContent = teamArch.length;
+  teamArchived.innerHTML = "";
+  teamArch.forEach(function (a) { teamArchived.appendChild(buildArchivedAppointmentCard(a)); });
+
   if (window.lucide) lucide.createIcons();
-  setupAppointmentContextMenus();
+  setupAppointmentActions();
 }
+
+var APPT_SWIPE_ACTIONS = [
+  { className: "archive", icon: "archive", label: "Archivar" },
+  { className: "delete", icon: "trash-2", label: "Eliminar" },
+];
 
 function buildAppointmentCard(appt, showEmployeeName, compact) {
   var wrap = document.createElement("div");
-  wrap.className = "appt-swipe-wrap";
+  wrap.className = "swipe-wrap";
   wrap.dataset.apptId = appt.id;
 
   var card = document.createElement("article");
@@ -141,15 +159,49 @@ function buildAppointmentCard(appt, showEmployeeName, compact) {
     '<div class="appt-price">' + (appt.is_free ? '<span class="free-badge">🎁 Gratis</span>' : '$' + Number(appt.price).toFixed(2)) + '</div>' +
     actionsHtml;
 
-  wrap.innerHTML = '<div class="appt-swipe-action"><i data-lucide="trash-2"></i> Eliminar</div>';
+  wrap.innerHTML = buildSwipeActionsHtml(APPT_SWIPE_ACTIONS);
   wrap.appendChild(card);
 
   return wrap;
 }
 
+function buildArchivedAppointmentCard(appt) {
+  var card = document.createElement("article");
+  card.className = "dash-card appt-card compact";
+  card.innerHTML =
+    '<div class="appt-card-top">' +
+      '<div><p class="appt-client-name">' + appt.client_name + '</p>' +
+      '<p class="appt-service">' + appt.service_name + '</p></div>' +
+      '<span class="status-badge ' + appt.status + '">' + ADM_STATUS_LABELS[appt.status] + '</span>' +
+    '</div>' +
+    '<div class="appt-meta">' +
+      '<span><i data-lucide="calendar"></i> ' + appt.appointment_date + '</span>' +
+      '<span><i data-lucide="clock"></i> ' + appt.appointment_time + '</span>' +
+    '</div>' +
+    '<div class="appt-price">' + (appt.is_free ? '<span class="free-badge">🎁 Gratis</span>' : '$' + Number(appt.price).toFixed(2)) + '</div>' +
+    '<button type="button" class="unarchive-btn" data-unarchive-appt="' + appt.id + '"><i data-lucide="archive-restore"></i> Desarchivar</button>';
+  return card;
+}
+
+document.addEventListener("click", async function (e) {
+  var unarchiveBtn = e.target.closest("[data-unarchive-appt]");
+  if (unarchiveBtn) {
+    unarchiveBtn.disabled = true;
+    var { error } = await supabaseClient.from("appointments").update({ is_archived: false }).eq("id", unarchiveBtn.dataset.unarchiveAppt);
+    if (error) { alert("No se pudo desarchivar."); console.error(error); unarchiveBtn.disabled = false; return; }
+    await loadAppointments();
+  }
+});
+
 /* ============================================================
-   ELIMINAR CITA: clic derecho (PC) + swipe izquierda (celular)
+   ARCHIVAR / ELIMINAR CITA: clic derecho (PC) + swipe (celular)
    ============================================================ */
+async function archiveAppointment(id) {
+  var { error } = await supabaseClient.from("appointments").update({ is_archived: true }).eq("id", id);
+  if (error) { alert("No se pudo archivar la cita."); console.error(error); return; }
+  await loadAppointments();
+}
+
 async function deleteAppointment(id) {
   var { error } = await supabaseClient.from("appointments").delete().eq("id", id);
   if (error) {
@@ -162,8 +214,21 @@ async function deleteAppointment(id) {
   await loadClientsLoyalty();
 }
 
+function toggleArchivedSection(toggleBtnId, listId) {
+  var btn = document.getElementById(toggleBtnId);
+  var list = document.getElementById(listId);
+  if (!btn) return;
+  btn.addEventListener("click", function () {
+    var showing = list.style.display !== "none";
+    list.style.display = showing ? "none" : "";
+  });
+}
+
 var contextMenusReady = false;
-function setupAppointmentContextMenus() {
+function setupAppointmentActions() {
+  toggleArchivedSection("own-appointments-archive-toggle", "own-appointments-archived");
+  toggleArchivedSection("team-appointments-archive-toggle", "team-appointments-archived");
+
   if (contextMenusReady) return; // los contenedores no se reemplazan, solo su contenido
   if (typeof attachContextMenu !== "function") return;
   contextMenusReady = true;
@@ -173,6 +238,11 @@ function setupAppointmentContextMenus() {
     document.getElementById("team-appointments-wrap"),
   ].forEach(function (wrapEl) {
     attachContextMenu(wrapEl, "[data-appt-id]", [
+      {
+        label: "Archivar cita",
+        icon: "archive",
+        onClick: function (targetEl) { archiveAppointment(targetEl.dataset.apptId); },
+      },
       {
         label: "Eliminar cita",
         icon: "trash-2",
@@ -184,12 +254,21 @@ function setupAppointmentContextMenus() {
       },
     ]);
 
-    if (typeof attachSwipeToDelete === "function") {
-      attachSwipeToDelete(wrapEl, ".appt-swipe-wrap", function (swipeWrapEl, closeFn) {
-        showConfirmDialog("¿Eliminar esta cita? Esta acción no se puede deshacer.", function () {
-          deleteAppointment(swipeWrapEl.dataset.apptId);
-        });
-      });
+    if (typeof attachSwipeActions === "function") {
+      attachSwipeActions(wrapEl, ".swipe-wrap", [
+        {
+          className: "archive", icon: "archive", label: "Archivar",
+          onClick: function (wrapElInner) { archiveAppointment(wrapElInner.dataset.apptId); },
+        },
+        {
+          className: "delete", icon: "trash-2", label: "Eliminar",
+          onClick: function (wrapElInner) {
+            showConfirmDialog("¿Eliminar esta cita? Esta acción no se puede deshacer.", function () {
+              deleteAppointment(wrapElInner.dataset.apptId);
+            });
+          },
+        },
+      ]);
     }
   });
 }
@@ -434,39 +513,56 @@ async function loadClientsLoyalty() {
 function setupLinkEmployeeForm() {
   var form = document.getElementById("link-employee-form");
   var msgEl = document.getElementById("link-employee-msg");
+  var submitBtn = form.querySelector(".dash-form-submit");
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     msgEl.textContent = "";
     msgEl.className = "dash-form-msg";
 
-    var uuid = document.getElementById("emp-uuid").value.trim();
     var name = document.getElementById("emp-name").value.trim();
+    var cedula = document.getElementById("emp-cedula").value.trim();
     var phone = document.getElementById("emp-phone").value.trim();
+    var email = document.getElementById("emp-email").value.trim();
+    var password = document.getElementById("emp-password").value.trim();
     var commission = parseFloat(document.getElementById("emp-commission").value);
 
-    if (!uuid || !name) {
-      msgEl.textContent = "Completa al menos el UUID y el nombre.";
+    if (!name || !cedula || !email || !password) {
+      msgEl.textContent = "Completa nombre, cédula, correo y contraseña.";
+      msgEl.classList.add("error");
+      return;
+    }
+    if (password.length < 6) {
+      msgEl.textContent = "La contraseña debe tener al menos 6 caracteres.";
       msgEl.classList.add("error");
       return;
     }
 
-    var { error } = await supabaseClient.from("profiles").upsert({
-      id: uuid,
-      role: "employee",
-      full_name: name,
-      phone: phone,
-      commission_percentage: commission,
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Creando...";
+
+    var { data, error } = await supabaseClient.functions.invoke("admin-create-employee", {
+      body: {
+        fullName: name,
+        cedula: cedula,
+        phone: phone,
+        email: email,
+        password: password,
+        commissionPercentage: commission,
+      },
     });
 
-    if (error) {
-      msgEl.textContent = "No se pudo activar: " + error.message;
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Crear empleado";
+
+    if (error || !data || data.error) {
+      msgEl.textContent = "No se pudo crear: " + ((data && data.error) || (error && error.message) || "intenta de nuevo.");
       msgEl.classList.add("error");
-      console.error(error);
+      console.error(error || data.error);
       return;
     }
 
-    msgEl.textContent = "Empleado activado correctamente.";
+    msgEl.textContent = "¡Empleado creado correctamente! Ya puede iniciar sesión con su cédula.";
     msgEl.classList.add("ok");
     form.reset();
     document.getElementById("emp-commission").value = 50;

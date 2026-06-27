@@ -1,7 +1,9 @@
 /* ============================================================================
    ESTUDIO 15 — LOGIN.JS
-   Login real contra Supabase Auth. Tras iniciar sesión, lee el rol en
-   profiles y redirige al panel correspondiente (admin/empleado/cliente).
+   Login con número de cédula (no correo). Por debajo sigue siendo
+   Supabase Auth: la Edge Function "login-with-cedula" busca el correo
+   real (con permisos de servidor, nunca expuesto al navegador) y hace
+   el login de verdad, devolviendo los tokens de sesión.
    Requiere supabase-client.js y auth.js cargados antes.
    ============================================================================ */
 
@@ -10,13 +12,24 @@ document.addEventListener("DOMContentLoaded", function () {
   var form = document.querySelector(".form");
   if (!form) return;
 
-  var emailInput = form.querySelector('input[type="text"]');
-  var passwordInput = form.querySelector('input[type="password"]');
+  var cedulaInput = document.getElementById("login-cedula");
+  var passwordInput = document.getElementById("login-password");
   var submitBtn = form.querySelector(".button-submit");
   var errorEl = document.getElementById("login-error");
+  var toggleBtn = document.getElementById("toggle-login-password");
 
   function showError(msg) {
     if (errorEl) errorEl.textContent = msg;
+  }
+
+  // Botón de mostrar/ocultar contraseña
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function () {
+      var showing = passwordInput.type === "text";
+      passwordInput.type = showing ? "password" : "text";
+      toggleBtn.innerHTML = '<i data-lucide="' + (showing ? "eye" : "eye-off") + '"></i>';
+      if (window.lucide) lucide.createIcons();
+    });
   }
 
   // Si ya hay sesión activa, no tiene sentido mostrar el login.
@@ -28,25 +41,32 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
     showError("");
 
-    var email = emailInput.value.trim();
+    var cedula = cedulaInput.value.trim();
     var password = passwordInput.value.trim();
 
-    if (!email || !password) {
-      showError("Por favor completa tu correo y contraseña.");
+    if (!cedula || !password) {
+      showError("Por favor completa tu cédula y contraseña.");
       return;
     }
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Ingresando...";
 
-    var { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    var { data, error } = await supabaseClient.functions.invoke("login-with-cedula", {
+      body: { cedula: cedula, password: password },
+    });
 
-    if (error) {
+    if (error || !data || data.error || !data.access_token) {
       submitBtn.disabled = false;
       submitBtn.textContent = "Iniciar sesión";
-      showError("Correo o contraseña incorrectos.");
+      showError("Cédula o contraseña incorrectos.");
       return;
     }
+
+    await supabaseClient.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    });
 
     var profile = await getCurrentProfile();
     submitBtn.disabled = false;

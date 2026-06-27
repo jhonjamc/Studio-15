@@ -30,6 +30,12 @@
       <input type="text" id="reg-name" class="input" placeholder="Escribe tu nombre completo" required>
     </div>
 
+    <div class="flex-column"><label>Cédula</label></div>
+    <div class="inputForm">
+      <i data-lucide="id-card" class="inputForm-icon"></i>
+      <input type="text" id="reg-cedula" class="input" placeholder="Escribe tu número de cédula" inputmode="numeric" required>
+    </div>
+
     <div class="flex-column"><label>Número celular</label></div>
     <div class="inputForm">
       <i data-lucide="phone" class="inputForm-icon"></i>
@@ -46,6 +52,9 @@
     <div class="inputForm">
       <i data-lucide="lock" class="inputForm-icon"></i>
       <input type="password" id="reg-password" class="input" placeholder="Mínimo 6 caracteres" required>
+      <button type="button" class="toggle-password-btn" id="toggle-reg-password" aria-label="Mostrar contraseña">
+        <i data-lucide="eye"></i>
+      </button>
     </div>
 
     <button type="submit" class="button-submit">Crear cuenta</button>
@@ -55,7 +64,7 @@
   </form>
 </section>
 
-<div id="site-footer"></div>
+<div id="site-dashboard-footer"></div>
 <div id="site-cart"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.378.0/umd/lucide.min.js"></script>

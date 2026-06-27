@@ -40,16 +40,28 @@
     <!-- ===================== MIS CITAS ===================== -->
     <div class="dashboard-block">
       <h2 class="dashboard-block-title"><i data-lucide="calendar"></i> Mis citas</h2>
-      <div class="cards-grid cols-3" id="appointments-list">
-        <p class="dashboard-empty">Cargando tus citas...</p>
+      <div id="appointments-wrap">
+        <div class="cards-grid cols-3" id="appointments-list">
+          <p class="dashboard-empty">Cargando tus citas...</p>
+        </div>
+        <button type="button" class="archive-toggle-btn" id="appointments-archive-toggle">
+          <i data-lucide="archive"></i> Ver archivadas (<span id="appointments-archive-count">0</span>)
+        </button>
+        <div class="cards-grid cols-4" id="appointments-archived" style="display:none; margin-top:14px;"></div>
       </div>
     </div>
 
     <!-- ===================== HISTORIAL DE COMPRAS ===================== -->
     <div class="dashboard-block">
       <h2 class="dashboard-block-title"><i data-lucide="shopping-bag"></i> Historial de compras</h2>
-      <div class="cards-grid cols-3" id="purchases-list">
-        <p class="dashboard-empty">Cargando tu historial...</p>
+      <div id="purchases-wrap">
+        <div class="cards-grid cols-3" id="purchases-list">
+          <p class="dashboard-empty">Cargando tu historial...</p>
+        </div>
+        <button type="button" class="archive-toggle-btn" id="purchases-archive-toggle">
+          <i data-lucide="archive"></i> Ver archivadas (<span id="purchases-archive-count">0</span>)
+        </button>
+        <div class="cards-grid cols-4" id="purchases-archived" style="display:none; margin-top:14px;"></div>
       </div>
     </div>
 

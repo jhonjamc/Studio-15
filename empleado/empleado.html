@@ -76,6 +76,11 @@
         </div>
         <h3 class="dashboard-subblock-title">Completadas</h3>
         <div class="cards-grid cols-4" id="appointments-completed"></div>
+
+        <button type="button" class="archive-toggle-btn" id="appointments-archive-toggle">
+          <i data-lucide="archive"></i> Ver archivadas (<span id="appointments-archive-count">0</span>)
+        </button>
+        <div class="cards-grid cols-4" id="appointments-archived" style="display:none; margin-top:14px;"></div>
       </div>
     </div>
 

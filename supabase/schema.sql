@@ -27,6 +27,7 @@ create table if not exists public.profiles (
   role text not null default 'client' check (role in ('admin', 'employee', 'client')),
   full_name text,
   phone text,
+  cedula text unique,
   avatar_url text,
   -- % que se gana el barbero (admin o empleado) por cada cita completada.
   -- El admin, por ser dueño, tiene un % más alto. Los empleados van iguales.
@@ -80,6 +81,8 @@ create table if not exists public.appointments (
   appointment_time text not null,
   status text not null default 'pending'
     check (status in ('pending', 'accepted', 'rejected', 'completed', 'cancelled')),
+  is_free boolean not null default false,
+  is_archived boolean not null default false,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -126,6 +129,7 @@ create table if not exists public.purchases (
   items jsonb not null,
   total numeric not null,
   status text not null default 'pending' check (status in ('pending', 'approved', 'declined')),
+  is_archived boolean not null default false,
   payment_reference text unique,
   payment_provider_id text,
   created_at timestamptz not null default now()
@@ -161,11 +165,12 @@ create index if not exists idx_reviews_created on public.reviews(created_at desc
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, full_name, phone, role)
+  insert into public.profiles (id, full_name, phone, cedula, role)
   values (
     new.id,
     new.raw_user_meta_data->>'full_name',
     new.raw_user_meta_data->>'phone',
+    new.raw_user_meta_data->>'cedula',
     'client'
   );
   return new;
@@ -181,13 +186,25 @@ create trigger on_auth_user_created
 -- ============================================================
 -- 7. TRIGGER: contador de cortes (fidelidad)
 -- Cuando una cita pasa a 'completed', suma 1 al contador del
--- cliente. La barra de progreso en el panel del cliente muestra
--- completed_cuts % 6 (0 a 5, y al llegar a 5 el próximo es gratis).
+-- cliente. El ciclo es de 11 cortes: completed_cuts % 11 va de
+-- 0 a 10, y la cita que cae en la posición 10 (el corte número 11
+-- del ciclo) se marca SOLA como gratis (price = 0, is_free = true)
+-- antes de sumar el contador.
 -- ============================================================
 create or replace function public.handle_appointment_completed()
 returns trigger as $$
+declare
+  current_cuts integer;
 begin
   if new.status = 'completed' and old.status is distinct from 'completed' then
+    select completed_cuts into current_cuts from public.profiles where id = new.client_id;
+
+    if current_cuts % 11 = 10 then
+      update public.appointments
+      set price = 0, is_free = true
+      where id = new.id;
+    end if;
+
     update public.profiles
     set completed_cuts = completed_cuts + 1
     where id = new.client_id;
@@ -285,9 +302,10 @@ create policy "appointments_insert_own_client" on public.appointments
 
 drop policy if exists "appointments_update" on public.appointments;
 create policy "appointments_update" on public.appointments
-  for update using (employee_id = auth.uid() or public.is_admin());
+  for update using (employee_id = auth.uid() or public.is_admin() or client_id = auth.uid());
 
--- El admin puede eliminar cualquier cita; un empleado solo las suyas.
+-- El admin puede eliminar cualquier cita; un empleado solo las suyas;
+-- el cliente solo si sigue pendiente.
 drop policy if exists "appointments_delete" on public.appointments;
 create policy "appointments_delete" on public.appointments
   for delete using (
@@ -305,11 +323,19 @@ drop policy if exists "purchases_insert_own" on public.purchases;
 create policy "purchases_insert_own" on public.purchases
   for insert with check (client_id = auth.uid());
 
--- El admin confirma pagos manuales (Nequi/Bancolombia) marcando la
--- compra como aprobada o rechazada desde su panel.
+-- El admin confirma pagos manuales (marca aprobada/rechazada); el
+-- cliente puede archivar las suyas (cambiar is_archived).
 drop policy if exists "purchases_update_admin" on public.purchases;
-create policy "purchases_update_admin" on public.purchases
-  for update using (public.is_admin());
+create policy "purchases_update_own_or_admin" on public.purchases
+  for update using (client_id = auth.uid() or public.is_admin());
+
+-- El admin puede eliminar cualquier compra; el cliente solo si sigue pendiente.
+drop policy if exists "purchases_delete" on public.purchases;
+create policy "purchases_delete" on public.purchases
+  for delete using (
+    public.is_admin()
+    or (client_id = auth.uid() and status = 'pending')
+  );
 
 -- ---------- reviews ----------
 -- Públicas para lectura (se muestran en el home a cualquiera).

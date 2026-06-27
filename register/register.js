@@ -16,16 +16,28 @@ document.addEventListener("DOMContentLoaded", function () {
     errorEl.textContent = msg;
   }
 
+  var toggleBtn = document.getElementById("toggle-reg-password");
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function () {
+      var passwordInput = document.getElementById("reg-password");
+      var showing = passwordInput.type === "text";
+      passwordInput.type = showing ? "password" : "text";
+      toggleBtn.innerHTML = '<i data-lucide="' + (showing ? "eye" : "eye-off") + '"></i>';
+      if (window.lucide) lucide.createIcons();
+    });
+  }
+
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     showError("");
 
     var name = document.getElementById("reg-name").value.trim();
+    var cedula = document.getElementById("reg-cedula").value.trim();
     var phone = document.getElementById("reg-phone").value.trim();
     var email = document.getElementById("reg-email").value.trim();
     var password = document.getElementById("reg-password").value.trim();
 
-    if (!name || !phone || !email || !password) {
+    if (!name || !cedula || !phone || !email || !password) {
       showError("Completa todos los campos.");
       return;
     }
@@ -41,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
       email: email,
       password: password,
       options: {
-        data: { full_name: name, phone: phone },
+        data: { full_name: name, phone: phone, cedula: cedula },
       },
     });
 

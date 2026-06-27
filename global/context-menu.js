@@ -1,15 +1,20 @@
 /* ============================================================================
    ESTUDIO 15 — CONTEXT-MENU.JS
-   Acciones para eliminar una cita:
-   - PC: clic derecho → menú contextual.
-   - Celular: deslizar hacia la izquierda → aparece "Eliminar" (estilo iPhone).
-   Más un cuadro de confirmación propio (nada de confirm() feo del navegador).
+   Acciones sobre una card (cita o compra):
+   - PC: clic derecho → menú contextual con varias opciones.
+   - Celular: deslizar hacia la izquierda → aparecen los botones
+     (estilo iPhone), uno al lado del otro si hay más de una acción.
+   Más un cuadro de confirmación propio (nada de confirm() feo).
 
    Uso:
-   attachContextMenu(contenedor, '[data-appt-id]', [
-     { label: "Eliminar cita", icon: "trash-2", onClick: function (targetEl) { ... } }
+   attachContextMenu(contenedor, '[data-row-id]', [
+     { label: "Archivar", icon: "archive", onClick: function (targetEl) { ... } },
+     { label: "Eliminar", icon: "trash-2", onClick: function (targetEl) { ... } },
    ]);
-   attachSwipeToDelete(contenedor, '.appt-swipe-wrap', function (wrapEl, closeFn) { ... });
+   attachSwipeActions(contenedor, '.swipe-wrap', [
+     { className: "archive", icon: "archive", label: "Archivar", onClick: function (wrapEl, closeFn) { ... } },
+     { className: "delete", icon: "trash-2", label: "Eliminar", onClick: function (wrapEl, closeFn) { ... } },
+   ]);
    showConfirmDialog("¿Seguro?", function () { ... });
    ============================================================================ */
 
@@ -25,7 +30,7 @@ function showConfirmDialog(message, onConfirm) {
       '<p class="confirm-message">' + message + '</p>' +
       '<div class="confirm-actions">' +
         '<button type="button" class="confirm-btn confirm-cancel">Cancelar</button>' +
-        '<button type="button" class="confirm-btn confirm-delete">Eliminar</button>' +
+        '<button type="button" class="confirm-btn confirm-delete">Confirmar</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
@@ -98,16 +103,20 @@ function attachContextMenu(container, targetSelector, items) {
 
 
 /* ============================================================
-   SWIPE TO DELETE (solo celular, estilo iPhone)
+   SWIPE DE ACCIONES (solo celular, estilo iPhone)
    Requiere que cada card esté envuelta así:
-   <div class="appt-swipe-wrap" data-appt-id="...">
-     <div class="appt-swipe-action">...</div>
-     <article class="dash-card appt-card">...</article>
+   <div class="swipe-wrap" data-row-id="...">
+     <div class="swipe-actions">
+       <button class="swipe-action archive">...</button>
+       <button class="swipe-action delete">...</button>
+     </div>
+     <article class="dash-card ...">...</article>
    </div>
    ============================================================ */
-function attachSwipeToDelete(container, wrapSelector, onDelete) {
+function attachSwipeActions(container, wrapSelector, actions) {
   if (!container) return;
-  var REVEAL = 84;
+  var ACTION_WIDTH = 84;
+  var REVEAL = ACTION_WIDTH * actions.length;
   var openWrap = null;
   var startX, startY, baseX, dragging, activeWrap, activeCard;
 
@@ -124,7 +133,7 @@ function attachSwipeToDelete(container, wrapSelector, onDelete) {
   }
 
   function closeWrap(wrap) {
-    var card = wrap.querySelector(".appt-card");
+    var card = wrap.querySelector(".dash-card");
     if (card) setTransform(card, 0, true);
     wrap.classList.remove("swiped-open");
     if (openWrap === wrap) openWrap = null;
@@ -136,7 +145,7 @@ function attachSwipeToDelete(container, wrapSelector, onDelete) {
     if (openWrap && openWrap !== wrap) closeWrap(openWrap);
 
     activeWrap = wrap;
-    activeCard = wrap.querySelector(".appt-card");
+    activeCard = wrap.querySelector(".dash-card");
     baseX = wrap.classList.contains("swiped-open") ? -REVEAL : 0;
     var t = e.touches[0];
     startX = t.clientX; startY = t.clientY; dragging = false;
@@ -177,17 +186,31 @@ function attachSwipeToDelete(container, wrapSelector, onDelete) {
     activeWrap = null; activeCard = null; dragging = false;
   });
 
-  // Tap en el botón rojo "Eliminar" que queda revelado
+  // Tap en cualquiera de los botones revelados
   container.addEventListener("click", function (e) {
-    var actionBtn = e.target.closest(".appt-swipe-action");
-    if (!actionBtn) return;
-    var wrap = actionBtn.closest(wrapSelector);
+    var btn = e.target.closest(".swipe-action");
+    if (!btn) return;
+    var wrap = btn.closest(wrapSelector);
     if (!wrap) return;
-    onDelete(wrap, function () { closeWrap(wrap); });
+    var index = Array.prototype.indexOf.call(btn.parentNode.children, btn);
+    var action = actions[index];
+    if (action) action.onClick(wrap, function () { closeWrap(wrap); });
   });
 
   // Tocar afuera cierra el que esté abierto
   document.addEventListener("touchstart", function (e) {
     if (openWrap && !openWrap.contains(e.target)) closeWrap(openWrap);
   }, { passive: true });
+}
+
+/* Construye el HTML de los botones de swipe a partir de la misma
+   lista de acciones que se le pasa a attachSwipeActions. */
+function buildSwipeActionsHtml(actions) {
+  return '<div class="swipe-actions">' +
+    actions.map(function (a) {
+      return '<button type="button" class="swipe-action ' + (a.className || "") + '">' +
+        '<i data-lucide="' + a.icon + '"></i> ' + a.label +
+      '</button>';
+    }).join("") +
+  '</div>';
 }

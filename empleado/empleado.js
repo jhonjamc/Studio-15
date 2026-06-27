@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 async function loadAppointments() {
   var pendingList = document.getElementById("appointments-pending");
   var completedList = document.getElementById("appointments-completed");
+  var archivedList = document.getElementById("appointments-archived");
 
   var { data, error } = await supabaseClient
     .from("appointments")
@@ -50,8 +51,11 @@ async function loadAppointments() {
   }
 
   function isPending(a) { return a.status === "pending" || a.status === "accepted"; }
-  var pending = data.filter(isPending);
-  var completed = data.filter(function (a) { return !isPending(a); });
+  var active = data.filter(function (a) { return !a.is_archived; });
+  var archived = data.filter(function (a) { return a.is_archived; });
+
+  var pending = active.filter(isPending);
+  var completed = active.filter(function (a) { return !isPending(a); });
 
   pendingList.innerHTML = pending.length ? "" : '<p class="dashboard-empty">No tienes citas pendientes.</p>';
   pending.forEach(function (appt) { pendingList.appendChild(buildAppointmentCard(appt, false)); });
@@ -59,13 +63,22 @@ async function loadAppointments() {
   completedList.innerHTML = completed.length ? "" : '<p class="dashboard-empty">Sin historial todavía.</p>';
   completed.forEach(function (appt) { completedList.appendChild(buildAppointmentCard(appt, true)); });
 
+  document.getElementById("appointments-archive-count").textContent = archived.length;
+  archivedList.innerHTML = "";
+  archived.forEach(function (appt) { archivedList.appendChild(buildArchivedAppointmentCard(appt)); });
+
   if (window.lucide) lucide.createIcons();
-  setupAppointmentContextMenu();
+  setupAppointmentActions();
 }
+
+var APPT_SWIPE_ACTIONS = [
+  { className: "archive", icon: "archive", label: "Archivar" },
+  { className: "delete", icon: "trash-2", label: "Eliminar" },
+];
 
 function buildAppointmentCard(appt, compact) {
   var wrap = document.createElement("div");
-  wrap.className = "appt-swipe-wrap";
+  wrap.className = "swipe-wrap";
   wrap.dataset.apptId = appt.id;
 
   var card = document.createElement("article");
@@ -102,15 +115,49 @@ function buildAppointmentCard(appt, compact) {
     '<div class="appt-price">' + (appt.is_free ? '<span class="free-badge">🎁 Gratis</span>' : '$' + Number(appt.price).toFixed(2)) + '</div>' +
     actionsHtml;
 
-  wrap.innerHTML = '<div class="appt-swipe-action"><i data-lucide="trash-2"></i> Eliminar</div>';
+  wrap.innerHTML = buildSwipeActionsHtml(APPT_SWIPE_ACTIONS);
   wrap.appendChild(card);
 
   return wrap;
 }
 
+function buildArchivedAppointmentCard(appt) {
+  var card = document.createElement("article");
+  card.className = "dash-card appt-card compact";
+  card.innerHTML =
+    '<div class="appt-card-top">' +
+      '<div><p class="appt-client-name">' + appt.client_name + '</p>' +
+      '<p class="appt-service">' + appt.service_name + '</p></div>' +
+      '<span class="status-badge ' + appt.status + '">' + EMP_STATUS_LABELS[appt.status] + '</span>' +
+    '</div>' +
+    '<div class="appt-meta">' +
+      '<span><i data-lucide="calendar"></i> ' + appt.appointment_date + '</span>' +
+      '<span><i data-lucide="clock"></i> ' + appt.appointment_time + '</span>' +
+    '</div>' +
+    '<div class="appt-price">' + (appt.is_free ? '<span class="free-badge">🎁 Gratis</span>' : '$' + Number(appt.price).toFixed(2)) + '</div>' +
+    '<button type="button" class="unarchive-btn" data-unarchive-appt="' + appt.id + '"><i data-lucide="archive-restore"></i> Desarchivar</button>';
+  return card;
+}
+
+document.addEventListener("click", async function (e) {
+  var unarchiveBtn = e.target.closest("[data-unarchive-appt]");
+  if (unarchiveBtn) {
+    unarchiveBtn.disabled = true;
+    var { error } = await supabaseClient.from("appointments").update({ is_archived: false }).eq("id", unarchiveBtn.dataset.unarchiveAppt);
+    if (error) { alert("No se pudo desarchivar."); console.error(error); unarchiveBtn.disabled = false; return; }
+    await loadAppointments();
+  }
+});
+
 /* ============================================================
-   ELIMINAR CITA: clic derecho (PC) + swipe izquierda (celular)
+   ARCHIVAR / ELIMINAR CITA: clic derecho (PC) + swipe (celular)
    ============================================================ */
+async function archiveAppointment(id) {
+  var { error } = await supabaseClient.from("appointments").update({ is_archived: true }).eq("id", id);
+  if (error) { alert("No se pudo archivar la cita."); console.error(error); return; }
+  await loadAppointments();
+}
+
 async function deleteAppointment(id) {
   var { error } = await supabaseClient.from("appointments").delete().eq("id", id);
   if (error) {
@@ -123,7 +170,16 @@ async function deleteAppointment(id) {
 }
 
 var contextMenuReady = false;
-function setupAppointmentContextMenu() {
+function setupAppointmentActions() {
+  var toggleBtn = document.getElementById("appointments-archive-toggle");
+  var archivedList = document.getElementById("appointments-archived");
+  if (toggleBtn && !toggleBtn.dataset.bound) {
+    toggleBtn.dataset.bound = "1";
+    toggleBtn.addEventListener("click", function () {
+      archivedList.style.display = archivedList.style.display === "none" ? "" : "none";
+    });
+  }
+
   if (contextMenuReady) return; // el contenedor no se reemplaza, solo su contenido
   if (typeof attachContextMenu !== "function") return;
   contextMenuReady = true;
@@ -131,6 +187,11 @@ function setupAppointmentContextMenu() {
   var wrapEl = document.getElementById("appointments-wrap");
 
   attachContextMenu(wrapEl, "[data-appt-id]", [
+    {
+      label: "Archivar cita",
+      icon: "archive",
+      onClick: function (targetEl) { archiveAppointment(targetEl.dataset.apptId); },
+    },
     {
       label: "Eliminar cita",
       icon: "trash-2",
@@ -142,12 +203,21 @@ function setupAppointmentContextMenu() {
     },
   ]);
 
-  if (typeof attachSwipeToDelete === "function") {
-    attachSwipeToDelete(wrapEl, ".appt-swipe-wrap", function (swipeWrapEl, closeFn) {
-      showConfirmDialog("¿Eliminar esta cita? Esta acción no se puede deshacer.", function () {
-        deleteAppointment(swipeWrapEl.dataset.apptId);
-      });
-    });
+  if (typeof attachSwipeActions === "function") {
+    attachSwipeActions(wrapEl, ".swipe-wrap", [
+      {
+        className: "archive", icon: "archive", label: "Archivar",
+        onClick: function (wrapElInner) { archiveAppointment(wrapElInner.dataset.apptId); },
+      },
+      {
+        className: "delete", icon: "trash-2", label: "Eliminar",
+        onClick: function (wrapElInner) {
+          showConfirmDialog("¿Eliminar esta cita? Esta acción no se puede deshacer.", function () {
+            deleteAppointment(wrapElInner.dataset.apptId);
+          });
+        },
+      },
+    ]);
   }
 }
 

@@ -60,6 +60,13 @@
 }
 .inputForm:focus-within { border: 1.5px solid var(--color-blue); }
 
+.toggle-password-btn {
+  flex-shrink: 0; margin-right: 6px; padding: 4px;
+  display: grid; place-items: center; color: #9a9aa5;
+}
+.toggle-password-btn:hover { color: #151717; }
+.toggle-password-btn svg, .toggle-password-btn i { width: 18px; height: 18px; }
+
 .input {
   margin-left: 10px;
   border-radius: var(--radius-sm);

@@ -95,6 +95,11 @@
         </div>
         <h3 class="dashboard-subblock-title">Completadas</h3>
         <div class="cards-grid cols-4" id="own-appointments-completed"></div>
+
+        <button type="button" class="archive-toggle-btn" id="own-appointments-archive-toggle">
+          <i data-lucide="archive"></i> Ver archivadas (<span id="own-appointments-archive-count">0</span>)
+        </button>
+        <div class="cards-grid cols-4" id="own-appointments-archived" style="display:none; margin-top:14px;"></div>
       </div>
     </div>
 
@@ -108,6 +113,11 @@
         </div>
         <h3 class="dashboard-subblock-title">Completadas</h3>
         <div class="cards-grid cols-4" id="team-appointments-completed"></div>
+
+        <button type="button" class="archive-toggle-btn" id="team-appointments-archive-toggle">
+          <i data-lucide="archive"></i> Ver archivadas (<span id="team-appointments-archive-count">0</span>)
+        </button>
+        <div class="cards-grid cols-4" id="team-appointments-archived" style="display:none; margin-top:14px;"></div>
       </div>
     </div>
 
@@ -124,21 +134,28 @@
       <h2 class="dashboard-block-title"><i data-lucide="user-plus"></i> Vincular empleado</h2>
       <div class="dash-card" style="max-width:480px;">
         <p class="dash-card-sub" style="margin-bottom:14px;">
-          Primero crea el usuario en Supabase Dashboard → Authentication → Add user,
-          copia su UUID y complétalo aquí para activarlo como empleado.
+          Crea la cuenta de tu nuevo empleado directamente desde aquí.
         </p>
         <form class="dash-form" id="link-employee-form">
-          <div>
-            <label for="emp-uuid">UUID del usuario</label>
-            <input type="text" id="emp-uuid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
-          </div>
           <div>
             <label for="emp-name">Nombre completo</label>
             <input type="text" id="emp-name" placeholder="Nombre del empleado" required>
           </div>
           <div>
+            <label for="emp-cedula">Cédula</label>
+            <input type="text" id="emp-cedula" placeholder="Número de cédula" inputmode="numeric" required>
+          </div>
+          <div>
             <label for="emp-phone">Teléfono</label>
             <input type="text" id="emp-phone" placeholder="+57 300 000 0000">
+          </div>
+          <div>
+            <label for="emp-email">Correo</label>
+            <input type="email" id="emp-email" placeholder="correo@ejemplo.com" required>
+          </div>
+          <div>
+            <label for="emp-password">Contraseña inicial</label>
+            <input type="password" id="emp-password" placeholder="Mínimo 6 caracteres" required>
           </div>
           <div>
             <label for="emp-commission">Comisión del empleado (%)</label>
@@ -147,7 +164,7 @@
               Ej: 50% = la mitad para el empleado, la otra mitad para ti.
             </p>
           </div>
-          <button type="submit" class="dash-form-submit">Activar como empleado</button>
+          <button type="submit" class="dash-form-submit">Crear empleado</button>
           <p class="dash-form-msg" id="link-employee-msg"></p>
         </form>
       </div>
