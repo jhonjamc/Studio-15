@@ -124,6 +124,18 @@ async function initBookingWidget() {
     return;
   }
 
+  if (profile.role === "admin" || profile.role === "employee") {
+    document.getElementById("booking-gate-content").textContent =
+      profile.role === "admin"
+        ? "Como administrador no necesitas agendar citas contigo mismo desde aquí."
+        : "Como empleado no necesitas agendar citas desde aquí.";
+    gate.style.display = "block";
+    stepsHeader.style.display = "none";
+    nav.style.display = "none";
+    document.querySelectorAll(".booking-step-panel").forEach(function (p) { p.classList.remove("active"); });
+    return;
+  }
+
   var totalSteps = 4;
   var step = 1;
 
@@ -435,6 +447,12 @@ async function initReviews() {
   if (!profile) {
     formCard.style.display = "none";
     loginHint.style.display = "block";
+    return;
+  }
+
+  if (profile.role === "admin" || profile.role === "employee") {
+    formCard.style.display = "none";
+    loginHint.style.display = "none";
     return;
   }
 

@@ -30,30 +30,35 @@ Para agregar empleados después, no necesitas SQL: usa el formulario
 **"Vincular empleado"** dentro de `admin.html` (solo pide el UUID que copiaste
 del paso 1, aplicado a cada empleado).
 
-## 4. SMS con Twilio
-1. Crea cuenta en https://www.twilio.com, compra/activa un número.
-2. Instala la CLI de Supabase si no la tienes: `npm install -g supabase`
-3. Despliega la función:
+## 4. Notificación de citas: correo gratis con Resend (en vez de SMS)
+El SMS por Twilio cuesta (número + por mensaje). Esta opción es 100%
+gratis: en vez de mandar un SMS, le manda un correo al cliente.
+
+1. Crea cuenta gratis en https://resend.com (sin tarjeta).
+2. Dashboard de Resend → **API Keys → Create API Key** → cópiala (empieza con `re_`).
+3. Despliega la función (con `--no-verify-jwt`, porque la llama el
+   webhook de Supabase, no un usuario logueado):
    ```
-   supabase login
-   supabase link --project-ref TU-PROJECT-REF
-   supabase functions deploy send-appointment-sms
+   supabase functions deploy send-appointment-email --no-verify-jwt
    ```
-4. Configura los secrets:
+4. Configura el secret:
    ```
-   supabase secrets set TWILIO_ACCOUNT_SID=ACxxxxxxxx
-   supabase secrets set TWILIO_AUTH_TOKEN=xxxxxxxx
-   supabase secrets set TWILIO_FROM_NUMBER=+10000000000
+   supabase secrets set RESEND_API_KEY=re_xxxxxxxx
    ```
-5. Dashboard → **Database → Webhooks → Create a new hook**
+5. Dashboard de Supabase → **Database → Webhooks → Create a new hook**
    - Table: `appointments`
    - Events: `Update`
    - Type: `Supabase Edge Functions`
-   - Function: `send-appointment-sms`
+   - Function: `send-appointment-email`
 
-Listo: cuando aceptes o rechaces una cita (desde `admin.html` o `empleado.html`),
-el webhook dispara la función y el cliente recibe el SMS al número que escribió
-al agendar.
+Listo: cuando aceptes o rechaces una cita, el cliente recibe un correo
+al que usó para registrarse. Mientras no verifiques un dominio propio
+en Resend, los correos salen desde `onboarding@resend.dev` — funciona
+perfecto, solo que no se ve "tan profesional"; si más adelante compras
+un dominio, puedes verificarlo en Resend y mandar desde tu propio correo.
+
+(Si en algún momento prefieres SMS de verdad, `send-appointment-sms`
+sigue en el proyecto, solo que requiere pagar un número en Twilio.)
 
 ## 5. Pagos online con Mercado Pago (compra de productos)
 1. Crea tu cuenta **personal** (no necesitas RUT) en https://www.mercadopago.com.co
