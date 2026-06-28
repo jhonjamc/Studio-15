@@ -118,6 +118,11 @@ supabase functions deploy admin-delete-user
   usuarios" en su panel. ⚠️ Borra también sus citas/compras/reseñas.
 
 ## 7. Puestos de trabajo (1 = admin, 2 a 4 = empleados)
+La misma función de arriba también crea al **encargado de bebidas**
+(panel de admin → "Encargado de bebidas") — esa cuenta solo puede
+entrar a `bebidas.html` para registrar ventas, no ve nada más, y no
+puede eliminar ninguna venta (eso solo lo puede hacer el admin real).
+
 Despliega esta función nueva (no necesita secrets nuevos):
 ```
 supabase functions deploy admin-setup-puesto

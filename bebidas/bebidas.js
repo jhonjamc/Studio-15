@@ -6,14 +6,17 @@
 
 document.addEventListener("DOMContentLoaded", async function () {
 
-  var profile = await requireRole(["admin"]);
+  var profile = await requireRole(["admin", "drinks_admin"]);
   if (!profile) return;
 
+  currentDrinksProfile = profile;
   setupDrinkSaleForm(profile.id);
   await loadDrinkSales();
 
   if (window.lucide) lucide.createIcons();
 });
+
+var currentDrinksProfile = null;
 
 function setupDrinkSaleForm(adminId) {
   var form = document.getElementById("drink-sale-form");
@@ -105,16 +108,82 @@ async function loadDrinkSales() {
     return;
   }
 
+  var isRealAdmin = currentDrinksProfile && currentDrinksProfile.role === "admin";
+
   list.innerHTML = "";
   data.forEach(function (sale) {
     var date = new Date(sale.created_at).toLocaleString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-    var card = document.createElement("article");
-    card.className = "dash-card";
-    card.innerHTML =
+    var cardHtml =
       '<p class="dash-card-label">' + date + '</p>' +
       '<p class="dash-card-value" style="font-size:1.2rem;">' + sale.drink_name + ' x' + sale.quantity + '</p>' +
       '<p class="dash-card-sub">$' + Number(sale.unit_price).toFixed(2) + ' c/u</p>' +
       '<p class="appt-price">$' + Number(sale.total).toFixed(2) + '</p>';
-    list.appendChild(card);
+
+    if (isRealAdmin) {
+      var wrap = document.createElement("div");
+      wrap.className = "swipe-wrap";
+      wrap.dataset.saleId = sale.id;
+      wrap.innerHTML = buildSwipeActionsHtml([{ className: "delete", icon: "trash-2", label: "Eliminar" }]);
+      var card = document.createElement("article");
+      card.className = "dash-card";
+      card.innerHTML = cardHtml;
+      wrap.appendChild(card);
+      list.appendChild(wrap);
+    } else {
+      var plainCard = document.createElement("article");
+      plainCard.className = "dash-card";
+      plainCard.innerHTML = cardHtml;
+      list.appendChild(plainCard);
+    }
   });
+
+  if (isRealAdmin) setupDrinkSaleDelete();
+  if (window.lucide) lucide.createIcons();
+}
+
+/* ============================================================
+   ELIMINAR VENTA (solo admin de verdad, nunca el encargado)
+   ============================================================ */
+async function deleteDrinkSale(id) {
+  var { error } = await supabaseClient.from("drink_sales").delete().eq("id", id);
+  if (error) {
+    alert("No se pudo eliminar la venta.");
+    console.error(error);
+    return;
+  }
+  await loadDrinkSales();
+}
+
+var drinkSaleDeleteReady = false;
+function setupDrinkSaleDelete() {
+  if (drinkSaleDeleteReady) return; // el contenedor no se reemplaza, solo su contenido
+  if (typeof attachContextMenu !== "function") return;
+  drinkSaleDeleteReady = true;
+
+  var listEl = document.getElementById("drink-sales-list");
+
+  attachContextMenu(listEl, "[data-sale-id]", [
+    {
+      label: "Eliminar venta",
+      icon: "trash-2",
+      onClick: function (targetEl) {
+        showConfirmDialog("¿Eliminar esta venta? Esta acción no se puede deshacer.", function () {
+          deleteDrinkSale(targetEl.dataset.saleId);
+        });
+      },
+    },
+  ]);
+
+  if (typeof attachSwipeActions === "function") {
+    attachSwipeActions(listEl, ".swipe-wrap", [
+      {
+        className: "delete", icon: "trash-2", label: "Eliminar",
+        onClick: function (wrapElInner) {
+          showConfirmDialog("¿Eliminar esta venta? Esta acción no se puede deshacer.", function () {
+            deleteDrinkSale(wrapElInner.dataset.saleId);
+          });
+        },
+      },
+    ]);
+  }
 }

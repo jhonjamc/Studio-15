@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadClientsLoyalty();
   setupUserManagement();
   setupPuestoForm();
+  setupDrinksStaffForm();
 
   if (window.lucide) lucide.createIcons();
 });
@@ -744,7 +745,7 @@ function setupPuestoForm() {
     submitBtn.textContent = "Guardando...";
 
     var { data, error } = await supabaseClient.functions.invoke("admin-setup-puesto", {
-      body: { puestoNumber: puestoNumber, username: username, password: password },
+      body: { targetRole: "employee", puestoNumber: puestoNumber, username: username, password: password },
     });
 
     submitBtn.disabled = false;
@@ -766,5 +767,53 @@ function setupPuestoForm() {
     await loadProfilesCache();
     await loadEarnings();
     await loadWeeklyPayouts();
+  });
+}
+
+
+/* ============================================================
+   ENCARGADO DE BEBIDAS (sin nombre, sin correo, sin borrar)
+   ============================================================ */
+function setupDrinksStaffForm() {
+  var form = document.getElementById("drinks-staff-setup-form");
+  var msgEl = document.getElementById("drinks-staff-setup-msg");
+  var submitBtn = form.querySelector(".dash-form-submit");
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    msgEl.textContent = "";
+    msgEl.className = "dash-form-msg";
+
+    var username = document.getElementById("drinks-staff-username").value.trim();
+    var password = document.getElementById("drinks-staff-password").value.trim();
+
+    if (!username || !password) {
+      msgEl.textContent = "Completa el usuario y la contraseña.";
+      msgEl.classList.add("error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Guardando...";
+
+    var { data, error } = await supabaseClient.functions.invoke("admin-setup-puesto", {
+      body: { targetRole: "drinks_admin", username: username, password: password },
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Guardar";
+
+    if (error || !data || data.error) {
+      msgEl.textContent = "No se pudo guardar: " + ((data && data.error) || (error && error.message) || "intenta de nuevo.");
+      msgEl.classList.add("error");
+      console.error(error || (data && data.error));
+      return;
+    }
+
+    msgEl.textContent = data.action === "updated"
+      ? "Listo, se actualizó su usuario/contraseña."
+      : "¡Cuenta creada! Ya puede entrar solo a Bebidas con ese usuario.";
+    msgEl.classList.add("ok");
+    form.reset();
   });
 }

@@ -24,10 +24,13 @@
 -- ============================================================
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  role text not null default 'client' check (role in ('admin', 'employee', 'client')),
+  role text not null default 'client' check (role in ('admin', 'employee', 'client', 'drinks_admin')),
   full_name text,
   phone text,
   cedula text unique,
+  -- número de puesto (1 = admin, 2/3/4 = empleados). Ya no se muestran
+  -- nombres de empleados en la app, solo "Puesto N".
+  puesto_number integer,
   avatar_url text,
   -- % que se gana el barbero (admin o empleado) por cada cita completada.
   -- El admin, por ser dueño, tiene un % más alto. Los empleados van iguales.
@@ -157,6 +160,24 @@ create index if not exists idx_reviews_created on public.reviews(created_at desc
 
 
 -- ============================================================
+-- 5.1 DRINK_SALES
+-- Ventas de bebidas registradas A MANO por el admin (no pasan por
+-- el carrito de compras del cliente). 100% es ganancia del admin.
+-- ============================================================
+create table if not exists public.drink_sales (
+  id uuid primary key default gen_random_uuid(),
+  drink_name text not null,
+  unit_price numeric not null,
+  quantity integer not null default 1,
+  total numeric not null,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_drink_sales_created on public.drink_sales(created_at desc);
+
+
+-- ============================================================
 -- 6. TRIGGER: crear profile automático al registrarse
 -- Todo el que se registra desde register.html entra como
 -- 'client'. Los empleados/admin se promueven manualmente desde
@@ -251,12 +272,22 @@ alter table public.services enable row level security;
 alter table public.appointments enable row level security;
 alter table public.purchases enable row level security;
 alter table public.reviews enable row level security;
+alter table public.drink_sales enable row level security;
 
 -- Función auxiliar: ¿el usuario actual es admin?
 create or replace function public.is_admin()
 returns boolean as $$
   select exists (
     select 1 from public.profiles where id = auth.uid() and role = 'admin'
+  );
+$$ language sql security definer set search_path = public;
+
+-- Función auxiliar: ¿el usuario actual puede manejar bebidas?
+-- (el admin principal, o el encargado de bebidas)
+create or replace function public.is_drinks_staff()
+returns boolean as $$
+  select exists (
+    select 1 from public.profiles where id = auth.uid() and role in ('admin', 'drinks_admin')
   );
 $$ language sql security definer set search_path = public;
 
@@ -346,6 +377,25 @@ create policy "reviews_select_all" on public.reviews
 drop policy if exists "reviews_insert_own" on public.reviews;
 create policy "reviews_insert_own" on public.reviews
   for insert with check (client_id = auth.uid());
+
+-- ---------- drink_sales ----------
+-- Solo el admin puede ver, registrar, editar o borrar ventas de bebidas.
+-- ---------- drink_sales ----------
+-- El admin y el encargado de bebidas pueden ver y registrar ventas.
+-- SOLO el admin puede eliminarlas.
+drop policy if exists "drink_sales_admin_only" on public.drink_sales;
+
+drop policy if exists "drink_sales_select" on public.drink_sales;
+create policy "drink_sales_select" on public.drink_sales
+  for select using (public.is_drinks_staff());
+
+drop policy if exists "drink_sales_insert" on public.drink_sales;
+create policy "drink_sales_insert" on public.drink_sales
+  for insert with check (public.is_drinks_staff());
+
+drop policy if exists "drink_sales_delete_admin_only" on public.drink_sales;
+create policy "drink_sales_delete_admin_only" on public.drink_sales
+  for delete using (public.is_admin());
 
 
 -- ============================================================

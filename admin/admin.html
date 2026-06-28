@@ -178,6 +178,30 @@
       </div>
     </div>
 
+    <!-- ===================== ENCARGADO DE BEBIDAS ===================== -->
+    <div class="dashboard-block">
+      <h2 class="dashboard-block-title"><i data-lucide="cup-soda"></i> Encargado de bebidas</h2>
+      <div class="dash-card" style="max-width:480px;">
+        <p class="dash-card-sub" style="margin-bottom:14px;">
+          Esta cuenta SOLO puede entrar a la página de Bebidas para registrar
+          ventas — no ve citas, ganancias ni clientes, y no puede borrar
+          ninguna venta (eso solo lo puedes hacer tú).
+        </p>
+        <form class="dash-form" id="drinks-staff-setup-form">
+          <div>
+            <label for="drinks-staff-username">Usuario (con esto inicia sesión)</label>
+            <input type="text" id="drinks-staff-username" placeholder="Ej: BEBIDAS1" required>
+          </div>
+          <div>
+            <label for="drinks-staff-password">Contraseña</label>
+            <input type="password" id="drinks-staff-password" placeholder="Mínimo 6 caracteres" required>
+          </div>
+          <button type="submit" class="dash-form-submit">Guardar</button>
+          <p class="dash-form-msg" id="drinks-staff-setup-msg"></p>
+        </form>
+      </div>
+    </div>
+
     <!-- ===================== GESTIONAR USUARIOS (eliminar) ===================== -->
     <div class="dashboard-block">
       <h2 class="dashboard-block-title"><i data-lucide="user-x"></i> Gestionar usuarios</h2>

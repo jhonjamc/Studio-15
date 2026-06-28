@@ -21,6 +21,7 @@ const ROLE_HOME = {
   admin: "../admin/admin.html",
   employee: "../empleado/empleado.html",
   client: "../cliente/cliente.html",
+  drinks_admin: "../bebidas/bebidas.html",
 };
 
 
@@ -105,5 +106,6 @@ document.addEventListener("click", function (e) {
 function getStaffLabel(profile) {
   if (!profile) return "—";
   if (profile.role === "client") return profile.full_name || "Cliente";
+  if (profile.role === "drinks_admin") return "Encargado de bebidas";
   return profile.puesto_number ? ("Puesto " + profile.puesto_number) : (profile.full_name || "Sin asignar");
 }

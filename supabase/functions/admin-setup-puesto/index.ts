@@ -1,13 +1,14 @@
 // ============================================================================
 // ESTUDIO 15 — admin-setup-puesto
-// El admin le da usuario y contraseña a un puesto (2, 3 o 4) y queda
-// listo, sin tocar Supabase ni el SQL Editor. Si ese puesto ya tenía
-// alguien asignado, esto actualiza su usuario/contraseña (el número
-// de puesto nunca cambia).
+// El admin le da usuario y contraseña a:
+//   - un puesto de barbero (2, 3 o 4), o
+//   - el encargado de bebidas (sin acceso a nada más, no puede borrar ventas)
+// Todo sin tocar Supabase ni el SQL Editor. Si ya existía, esto solo
+// actualiza usuario/contraseña.
 //
-// Como Supabase Auth necesita un correo para crear la cuenta, se
-// genera uno interno automáticamente (el empleado nunca lo ve ni lo
-// necesita — inicia sesión con el "usuario" que pongas aquí).
+// Como Supabase Auth necesita un correo para crear la cuenta, se genera
+// uno interno automáticamente (la persona nunca lo ve ni lo necesita —
+// inicia sesión con el "usuario" que pongas aquí).
 //
 // Despliegue:
 //   supabase functions deploy admin-setup-puesto
@@ -60,9 +61,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { puestoNumber, username, password } = await req.json();
+    // targetRole: "employee" (puesto de barbero, requiere puestoNumber)
+    //          o "drinks_admin" (encargado de bebidas, sin puestoNumber)
+    const { targetRole, puestoNumber, username, password } = await req.json();
+    const role = targetRole === "drinks_admin" ? "drinks_admin" : "employee";
 
-    if (!puestoNumber || !username || !password) {
+    if (!username || !password || (role === "employee" && !puestoNumber)) {
       return new Response(JSON.stringify({ error: "Faltan datos." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -75,14 +79,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ¿Ya hay alguien en ese puesto? Si sí, solo le actualizamos
-    // usuario/contraseña (el puesto en sí no cambia).
-    const { data: existing } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("puesto_number", puestoNumber)
-      .eq("role", "employee")
-      .maybeSingle();
+    // ¿Ya existe esa cuenta? (un puesto por número, o el encargado de
+    // bebidas por su usuario). Si sí, solo actualizamos su contraseña.
+    var existingQuery = supabaseAdmin.from("profiles").select("id").eq("role", role);
+    existingQuery = role === "employee"
+      ? existingQuery.eq("puesto_number", puestoNumber)
+      : existingQuery.eq("cedula", username);
+    const { data: existing } = await existingQuery.maybeSingle();
 
     if (existing) {
       const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(existing.id, { password });
@@ -108,26 +111,32 @@ Deno.serve(async (req) => {
     }
 
     // No existe todavía: lo creamos. El correo es interno, nunca lo
-    // necesita el empleado (inicia sesión con "username", no con esto).
-    const fakeEmail = "puesto" + puestoNumber + "-" + Date.now() + "@estudio15.internal";
+    // necesita la persona (inicia sesión con "username", no con esto).
+    const fakeEmail = role + "-" + Date.now() + "@estudio15.internal";
 
     const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: fakeEmail,
       password: password,
       email_confirm: true,
-      user_metadata: { cedula: username, puesto_number: puestoNumber },
+      user_metadata: { cedula: username, puesto_number: role === "employee" ? puestoNumber : null },
     });
 
     if (createError || !created?.user) {
-      return new Response(JSON.stringify({ error: createError?.message || "No se pudo crear el puesto." }), {
+      return new Response(JSON.stringify({ error: createError?.message || "No se pudo crear la cuenta." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const updates: Record<string, unknown> = { role: role, cedula: username };
+    if (role === "employee") {
+      updates.puesto_number = puestoNumber;
+      updates.commission_percentage = 50;
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from("profiles")
-      .update({ role: "employee", puesto_number: puestoNumber, commission_percentage: 50, cedula: username })
+      .update(updates)
       .eq("id", created.user.id);
 
     if (updateError) {
