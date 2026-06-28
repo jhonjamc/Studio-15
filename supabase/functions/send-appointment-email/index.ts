@@ -53,14 +53,59 @@ Deno.serve(async (req) => {
     const fecha = record.appointment_date;
     const hora = record.appointment_time;
     const nombre = record.client_name || "Hola";
+    const isAccepted = record.status === "accepted";
 
-    const subject = record.status === "accepted"
-      ? "Tu cita en Estudio 15 fue confirmada"
+    const subject = isAccepted
+      ? "✂️ Tu cita en Estudio 15 fue confirmada"
       : "Tu cita en Estudio 15 fue rechazada";
 
-    const html = record.status === "accepted"
-      ? "<p>Hola " + nombre + ",</p><p>Tu cita del <strong>" + fecha + "</strong> a las <strong>" + hora + "</strong> en Estudio 15 fue <strong>confirmada</strong>. ¡Te esperamos!</p>"
-      : "<p>Hola " + nombre + ",</p><p>Lamentablemente tu cita del <strong>" + fecha + "</strong> a las <strong>" + hora + "</strong> en Estudio 15 fue <strong>rechazada</strong>. Por favor agenda otro horario cuando quieras.</p>";
+    var badgeColor = isAccepted ? "#2ecc71" : "#d4282c";
+    var badgeText = isAccepted ? "CONFIRMADA" : "RECHAZADA";
+    var message = isAccepted
+      ? "Tu cita quedó <strong>confirmada</strong>. ¡Te esperamos!"
+      : "Lamentablemente tu cita fue <strong>rechazada</strong>. Por favor agenda otro horario cuando quieras.";
+
+    var html =
+      '<div style="background:#0a0a0f; padding:32px 16px; font-family:Arial,Helvetica,sans-serif;">' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px; margin:0 auto; background:#171923; border-radius:16px; overflow:hidden; border:1px solid #222533;">' +
+
+          // Franja roja/blanca/azul (estilo poste de barbería)
+          '<tr><td style="height:6px; background-image:linear-gradient(90deg, #d4282c 0%, #d4282c 33%, #ffffff 33%, #ffffff 66%, #1c4dd4 66%, #1c4dd4 100%);"></td></tr>' +
+
+          // Logo / encabezado
+          '<tr><td style="padding:28px 28px 8px; text-align:center;">' +
+            '<div style="font-size:22px; font-weight:800; letter-spacing:1px; color:#f3ede3;">' +
+              'BARBER&Iacute;A <span style="color:#d4282c;">ESTUDIO 15</span>' +
+            '</div>' +
+          '</td></tr>' +
+
+          // Badge de estado
+          '<tr><td style="padding:8px 28px 0; text-align:center;">' +
+            '<span style="display:inline-block; background:' + badgeColor + '22; color:' + badgeColor + '; font-size:12px; font-weight:800; letter-spacing:1px; padding:6px 16px; border-radius:999px;">' + badgeText + '</span>' +
+          '</td></tr>' +
+
+          // Mensaje
+          '<tr><td style="padding:20px 28px 4px; color:#f3ede3; font-size:15px; line-height:1.6;">' +
+            'Hola ' + nombre + ',<br><br>' + message +
+          '</td></tr>' +
+
+          // Tarjeta con los datos de la cita
+          '<tr><td style="padding:20px 28px;">' +
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0f; border:1px solid #222533; border-radius:12px;">' +
+              '<tr><td style="padding:16px 20px; color:#9a9aa5; font-size:12px; text-transform:uppercase; letter-spacing:1px;">Fecha</td>' +
+              '<td style="padding:16px 20px; color:#f3ede3; font-size:14px; font-weight:700; text-align:right;">' + fecha + '</td></tr>' +
+              '<tr><td style="padding:0 20px 16px; color:#9a9aa5; font-size:12px; text-transform:uppercase; letter-spacing:1px;">Hora</td>' +
+              '<td style="padding:0 20px 16px; color:#f3ede3; font-size:14px; font-weight:700; text-align:right;">' + hora + '</td></tr>' +
+            '</table>' +
+          '</td></tr>' +
+
+          // Footer
+          '<tr><td style="padding:8px 28px 28px; text-align:center; color:#756b5d; font-size:12px;">' +
+            '© 2026 Estudio 15 &middot; Barber&iacute;a' +
+          '</td></tr>' +
+
+        '</table>' +
+      '</div>';
 
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
